@@ -1,0 +1,29 @@
+INDHOLDSOVERSIGT
+----------------
+
+ * Nødvendig software  
+ * Installation
+ * Andre datasæt
+
+
+NØDVENDIG SOFTWARE
+------------------
+
+ * Apache, gerne > 2.0
+ * PHP > 5.2
+ * MySQL
+
+
+INSTALLATION
+------------
+
+ * Download filerne fra http://tagger.dk/downloads.php og pak dem ud.
+ * Flyt filerne til et offentligt directory under document root på din webserver
+ * Opret først en database
+ * Download og importer det datasæt, du ønsker at bruge (se mere på http://tagger.dk/downloads.php)
+ * Pak filerne ud, så de kan tilgåes 
+
+ANDRE DATASÆT
+-------------
+
+ * Du kan selv ændre på datasættet eller vælge et andet, så det passer til din brugssituation
