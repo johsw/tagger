@@ -22,12 +22,12 @@ class Token {
 
   public function isUpperCase() {
     $text = $this->text;
-    return $text != mb_strtolower($text);
+    return $text != mb_strtolower($text, 'UTF-8');
   }
 
   public function isStopWord() {
     $text = $this->text;
-    return in_array(mb_strtolower($text), self::$stopwords);
+    return in_array(mb_strtolower($text, 'UTF-8'), self::$stopwords);
   }
 
   public function isInitWord() {
