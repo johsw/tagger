@@ -22,31 +22,20 @@ class Token {
 
   public function isUpperCase() {
     $text = $this->text;
-    if (mb_detect_encoding($text) != 'UTF-8'){
-      $text = utf8_encode($text);
-    }
-   return $text != mb_convert_case($text, MB_CASE_LOWER, "UTF-8");
+    return $text != mb_convert_case($text, MB_CASE_LOWER, "UTF-8");
   }
 
   public function isStopWord() {
     $text = $this->text;
-    if (mb_detect_encoding($text) != 'UTF-8'){
-      $text = utf8_encode($text);
-    }
-
-   return in_array(mb_convert_case($text, MB_CASE_LOWER, "UTF-8"), self::$stopwords);
+    return in_array(mb_convert_case($text, MB_CASE_LOWER, "UTF-8"), self::$stopwords);
   }
 
   public function isInitWord() {
      $text = $this->text;
-     if (mb_detect_encoding($text) != 'UTF-8') {
-       $text = utf8_encode($text);
-     }
-    return in_array($text, self::$initwords);
+     return in_array($text, self::$initwords);
   }
 
   public function isPrefixOrInfix() {
     return in_array(mb_strtolower($this->text), self::$prefix_or_infix);
-
   }
 }

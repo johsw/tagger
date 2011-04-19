@@ -35,6 +35,9 @@ class TagController {
     if (empty($this->text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
+    if (mb_detect_encoding($this->text) != 'UTF-8'){
+      $this->text = utf8_encode($this->text);
+    }
     $ner = $response->getRequestVars('ner');
     if (!empty($ner) && preg_match_all('/(' . implode('|', $conf['vocab_names']) . ')+[\ ]?/', $ner, $matches)) {
       $this->ner_vocabs = array_intersect_key(array_flip($conf['vocab_names']), array_flip($matches[1]));
