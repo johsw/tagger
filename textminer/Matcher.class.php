@@ -9,14 +9,11 @@ abstract class Matcher {
   protected $nonmatches;
 
   function __construct($potential_entities, $vocab_array) {
-    $temp = array();
+    $search_items = array();
     foreach ($potential_entities as $entity) {
-      $temp[] = $entity[0];
-      if (count($temp) > 1) {
-        $temp[] = implode(' ', $entity);
-      }
+      $search_items[] = implode(' ', $entity);
     }
-    $this->search_items = array_unique($temp);
+    $this->search_items = array_unique($search_items);
     $this->matches = array();
     $this->nonmatches = array();
     $this->vocabularies = implode(', ', $vocab_array);
