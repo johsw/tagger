@@ -35,7 +35,7 @@ class TagController {
     if (empty($this->text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
-    if (mb_detect_encoding($this->text) != 'UTF-8'){
+    if (mb_detect_encoding($this->text) != 'UTF-8') {
       $this->text = utf8_encode($this->text);
     }
     $ner = $response->getRequestVars('ner');

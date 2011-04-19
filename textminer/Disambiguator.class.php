@@ -9,7 +9,7 @@ class Disambiguator {
     $this->tags = $tags;
     $this->tag_ids = array();
     foreach ($this->tags as $vocabulary) {
-      foreach($vocabulary as $tid => $tag){
+      foreach($vocabulary as $tid => $tag) {
         $this->tag_ids[] = $tid;
       }
     }
@@ -20,7 +20,7 @@ class Disambiguator {
       // TODO: Do what?
     }
     foreach ($this->tags as $vocabulary => $tids) {
-      foreach($tids as $tid => $tag){
+      foreach($tids as $tid => $tag) {
         if ($tag['hits'] > 1) {
           $checked_tid = $this->checkRelatedTags($tag);
           if ($checked_tid != 0 && $checked_tid != $tid) {
@@ -40,7 +40,7 @@ class Disambiguator {
     $current = 0;
     foreach ($related_tags as $tid => $rtids) {
       $matches = count(array_intersect($rtids, $this->tag_ids));
-      if($matches > $max_matches){
+      if($matches > $max_matches) {
         $current = $tid;
         $max_matches = $matches;
       }
