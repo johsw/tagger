@@ -58,7 +58,12 @@ class EntityPreprocessor {
             // Jump two words.
             $i += 2;
             $entity[] = $next->getText();
-            $next = new Token($this->tokens[$i+2]);
+            if (isset($this->tokens[$i+2])) {
+              $next = new Token($this->tokens[$i+2]);
+            }
+            else {
+              break;
+            }
           }
         }
         $this->named_entities[] = $entity;
