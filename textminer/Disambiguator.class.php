@@ -53,8 +53,10 @@ class Disambiguator {
     $sql = sprintf("SELECT l.tid, l.name, GROUP_CONCAT(r.rtid SEPARATOR ', ') AS rtids FROM lookup AS l LEFT JOIN relations AS r ON l.tid = r.tid WHERE l.vid IN (%s) AND l.name = '%s' GROUP BY l.tid", $vocabularies, $tag['navn']);
     $matches = array();
     $result = DatabaseBuddy::query($sql);
-    while ($row = mysql_fetch_assoc($result)) {
-      $matches[$row['tid']] = explode(',', $row['rtids']);
+    if ($result) { 
+      while ($row = mysql_fetch_assoc($result)) {
+        $matches[$row['tid']] = explode(',', $row['rtids']);
+      }
     }
     return $matches;
   }
