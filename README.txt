@@ -5,7 +5,7 @@ artikler af Ian Selby:
 http://www.gen-x-design.com/archives/create-a-rest-api-with-php
 http://www.gen-x-design.com/archives/making-restful-requests-in-php
 
-Lige nu leder den efter steder, personer og organisioner. På sigt vil den også bruge en anden algoritme der kan finde mere generelle emneord som f.eks 'valg' eller 'demokrati'.
+Lige nu leder den efter egennavne, som fx steder, personer og organisioner. På sigt vil den også bruge en anden algoritme, der kan finde mere generelle emneord som f.eks 'valg' eller 'demokrati'.
 
 Både GET og POST kan bruges til forespørgsler. 
 
@@ -31,7 +31,7 @@ http://yourdomain.dk/v1/tag?url=http://yourotherdomain.dk/texts/test.txt
 ------------
 uris
 ------------
-Hvis du vil have returneret de URI'er, som er tilknyttet det enkelte tag, så brug argumentet uris. Det skal bare sættes til et, eller andet, som f. eks:
+Hvis du vil have returneret de URI'er, som er tilknyttet det enkelte tag, så brug argumentet 'uris'. Det skal bare sættes til et, eller andet, som f. eks:
 
 http://yourdomain.dk/v1/tag?url=http://yourotherdomain.dk/texts/test.txt&uris=true
 
@@ -39,6 +39,6 @@ http://yourdomain.dk/v1/tag?url=http://yourotherdomain.dk/texts/test.txt&uris=tr
 ------------
 disambiguate
 ------------
-Hvis du vil have Tagger til at forsøge at afklare tvetydigheder, så bruge argumentet disambiguate. Det skal bare sættes til et, eller andet, som f. eks:
+Hvis du vil have Tagger til at forsøge at afklare tvetydigheder (fx Kashmir, region eller band?), så brug argumentet 'disambiguate'. Det skal bare sættes til et, eller andet, som f. eks:
 
 http://yourdomain.dk/v1/tag?url=http://yourotherdomain.dk/texts/test.txt&disambiguate=true
