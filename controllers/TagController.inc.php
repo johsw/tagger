@@ -7,7 +7,6 @@ require_once 'textminer/DatabaseBuddy.inc.php';
 
 class TagController {
 
-  private $response;
   private $ner_vocabs;
   private $text;
   private $tag_array;
@@ -18,44 +17,32 @@ class TagController {
   private $return_unmatched = FALSE;
   private $disambiguate = FALSE;
 
-  public function __construct(RestResponse $response) {
+  public function __construct($text, $ner, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
     global $conf;
     if (!isset($conf['vocab_names']) || empty($conf['vocab_names'])) {
       throw new ErrorException('Missing vocab definition in configuration.');
     }
-    $this->response = $response;
-    $this->text = $response->getRequestVars('text');
-    if (empty($this->text)) {
-      $url = $response->getRequestVars('url');
-      if (!empty($url)) {
-        // Suppress errors.
-        $this->text = @file_get_contents($response->getRequestVars('url'));
-      }
-    }
-    if (empty($this->text)) {
-      throw new InvalidArgumentException('No text to find tags in has been supplied.');
-    }
+
+    $this->text = $text;
     if (mb_detect_encoding($this->text) != 'UTF-8') {
       $this->text = utf8_encode($this->text);
     }
-    $ner = $response->getRequestVars('ner');
+    if (empty($this->text)) {
+       throw new InvalidArgumentException('No text to find tags in has been supplied.');
+    }
+
+
     if (!empty($ner) && preg_match_all('/(' . implode('|', $conf['vocab_names']) . ')+[\ ]?/', $ner, $matches)) {
       $this->ner_vocabs = array_intersect_key(array_flip($conf['vocab_names']), array_flip($matches[1]));
     }
     else {
       $this->ner_vocabs = array_flip($conf['vocab_names']);
     }
-    if ($response->getRequestVars('disambiguate')) {
-      $this->disambiguate = $response->getRequestVars('disambiguate');
-    }
-    if ($response->getRequestVars('uris')) {
-      $this->return_uris = $response->getRequestVars('uris');
-    }
-    if ($response->getRequestVars('unmatched')) {
-      $this->return_unmatched = $response->getRequestVars('unmatched');
-    }
-    $this->use_markup = $response->getRequestVars('markup');
-    $this->nl2br = $response->getRequestVars('nl2br');
+    $this->disambiguate = $disambiguate;
+    $this->return_uris = $return_uris;
+    $this->return_unmatched = $return_unmatched;
+    $this->use_markup = $use_markup;
+    $this->nl2br = $nl2br;
   }
 
   public function process() {

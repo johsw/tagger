@@ -180,7 +180,7 @@ class RestUtils {
     return (isset($codes[$status])) ? $codes[$status] : '';
   }
 
-  private static function getController(RestResponse $req, $path_array) {
+  private static function getController(RestResponse $response, $path_array) {
     // Check versions of the api.
     if ('v1' != $path_array[0]) {
       die(RestUtils::sendResponse(501));
@@ -188,7 +188,15 @@ class RestUtils {
     try {
       if ('tag' == $path_array[1]) {
         include 'controllers/TagController.inc.php';
-        return new TagController($req);
+        return new TagController(
+            $response->getRequestVars('text'),
+            $response->getRequestVars('ner'),
+            $response->getRequestVars('disambiguate'),
+            $response->getRequestVars('uris'),
+            $response->getRequestVars('unmatched'),
+            $response->getRequestVars('markup'),
+            $response->getRequestVars('nl2br')
+            );
       }
     }
     catch (Exception $e) {
