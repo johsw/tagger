@@ -1,7 +1,9 @@
 <?php
-include 'conf.php';
-include 'rest/RestUtils.inc.php';
-include 'access/iplog.php';
+
+require_once 'defaults.php';
+require_once 'conf.php';
+require_once 'rest/RestUtils.inc.php';
+require_once 'access/iplog.php';
 
 $controller = RestUtils::processRequest();
 
