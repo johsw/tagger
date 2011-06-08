@@ -3,6 +3,7 @@
 require_once 'defaults.php';
 require_once 'conf.php';
 require_once 'textminer/Databasebuddy.inc.php';
+require_once 'updater/Retriever.class.php';
 require_once 'updater/Updater.class.php';
 
 /*
@@ -11,4 +12,5 @@ require_once 'updater/Updater.class.php';
 */
 //TODO: Maybe check if file is run from cli or not?!
 
-$updater = new Updater();
+$retriever = new Retriever();
+$result = new Updater($retriever->updates);
