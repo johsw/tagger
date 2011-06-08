@@ -1,4 +1,9 @@
 <?php
+// Not too pretty, but this gets the "root" of the tagger.
+define('TAGGER_DIR', preg_replace('@/[a-zA-Z0-9\-_]+$@', '', dirname(__FILE__)));
+// And the "root" is set in the include path.
+set_include_path(get_include_path() . PATH_SEPARATOR . TAGGER_DIR);
+
 require_once 'textminer/EntityPreprocessor.class.php';
 require_once 'textminer/Unmatched.class.php';
 require_once 'textminer/Disambiguator.class.php';
@@ -30,7 +35,6 @@ class TagController {
     if (empty($this->text)) {
        throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
-
 
     if (!empty($ner) && preg_match_all('/(' . implode('|', $conf['vocab_names']) . ')+[\ ]?/', $ner, $matches)) {
       $this->ner_vocabs = array_intersect_key(array_flip($conf['vocab_names']), array_flip($matches[1]));
