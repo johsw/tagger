@@ -8,6 +8,7 @@ class Tagger {
     
   private function __construct()  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
+    define('TAGGER_DIR', dirname(__FILE__));
     include 'conf.php';
     include 'textminer/DatabaseBuddy.inc.php';
     include 'controllers/TagController.inc.php';
