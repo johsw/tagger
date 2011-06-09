@@ -1,5 +1,4 @@
 <?php
-require_once 'textminer/DatabaseBuddy.inc.php';
 
 class Disambiguator {
 
@@ -48,8 +47,8 @@ class Disambiguator {
     return $current;
   }
   public function getRelatedTags($tag) {
-    global $conf;
-    $vocabularies = implode(',', array_keys($conf['vocab_names']));
+    $tagger_instance = Tagger::getTagger();
+    $vocabularies = implode(',', array_keys($tagger_instance->getSetting('vocab_names')));
     $sql = sprintf("SELECT l.tid, l.name, GROUP_CONCAT(r.rtid SEPARATOR ', ') AS rtids FROM lookup AS l LEFT JOIN relations AS r ON l.tid = r.tid WHERE l.vid IN (%s) AND l.name = '%s' GROUP BY l.tid", $vocabularies, $tag['navn']);
     $matches = array();
     $result = DatabaseBuddy::query($sql);
@@ -62,11 +61,12 @@ class Disambiguator {
   }
 
   public function getVocabulary($tid) {
-    global $conf;
+    $tagger_instance = Tagger::getTagger();
     $sql = sprintf("SELECT c.vid FROM canonical AS c WHERE c.tid = %s LIMIT 0,1", $tid);
     $result = DatabaseBuddy::query($sql);
     $row = mysql_fetch_assoc($result);
-    return $conf['vocab_names'][$row['vid']];
+    $vocab_names = $tagger_instance->getSetting('vocab_names');
+    return $vocab_names[$row['vid']];
   }
 }
 

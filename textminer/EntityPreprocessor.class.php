@@ -1,7 +1,7 @@
 <?php
 
-require_once 'Token.class.php';
-require_once 'NamedEntityMatcher.class.php';
+require_once 'textminer/Token.class.php';
+require_once 'textminer/NamedEntityMatcher.class.php';
 
 class EntityPreprocessor {
   private $tokens;

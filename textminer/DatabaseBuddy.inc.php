@@ -5,25 +5,26 @@
  * username and password in a format like this:
  *
  * <?php
- *  $conf['db]['name'] = 'db name';
- *  $conf['db]['server'] = 'servername';
- *  $conf['db]['username'] = 'yourusername';
- *  $conf['db]['password'] = 'yourpassword';
+ *  $tagger_conf['db]['name'] = 'db name';
+ *  $tagger_conf['db]['server'] = 'servername';
+ *  $tagger_conf['db]['username'] = 'yourusername';
+ *  $tagger_conf['db]['password'] = 'yourpassword';
  * ?>
  */
 
 class DatabaseBuddy {
   private $link = NULL;
   private function __construct() {
-    global $conf;
-    $this->link = mysql_connect($conf['db']['server'], $conf['db']['username'], $conf['db']['password']);
+    $tagger_instance = Tagger::getTagger();
+    $db_settings = $tagger_instance->getSetting('db');
+    $this->link = mysql_connect($db_settings['server'], $db_settings['username'], $db_settings['password']);
     if (!$this->link) {
       die('Could not connect: ' . mysql_error());
     }
     mysql_set_charset('utf8', $this->link);
     // If you are on an older version of PHP and have trouble with the function
     // call above here, try this instead: mysql_query("SET NAMES 'utf8'");
-    mysql_select_db($conf['db']['name']);
+    mysql_select_db($db_settings['name']);
   }
 
   public function __destruct() {

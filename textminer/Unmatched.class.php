@@ -1,5 +1,4 @@
 <?php
-require_once 'textminer/DatabaseBuddy.inc.php';
 
 class Unmatched {
 

@@ -1,14 +1,7 @@
 <?php
-// Not too pretty, but this gets the "root" of the tagger.
-define('TAGGER_DIR', preg_replace('@/[a-zA-Z0-9\-_]+$@', '', dirname(__FILE__)));
-// And the "root" is set in the include path.
-set_include_path(get_include_path() . PATH_SEPARATOR . TAGGER_DIR);
 
 require_once 'textminer/EntityPreprocessor.class.php';
 require_once 'textminer/Unmatched.class.php';
-require_once 'textminer/Disambiguator.class.php';
-require_once 'textminer/DatabaseBuddy.inc.php';
-
 
 class TagController {
 
@@ -23,11 +16,12 @@ class TagController {
   private $disambiguate = FALSE;
 
   public function __construct($text, $ner, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
-    global $conf;
-    if (!isset($conf['vocab_names']) || empty($conf['vocab_names'])) {
+
+    $tagger_instance = Tagger::getTagger();
+    $vocab_names = $tagger_instance->getSetting('vocab_names');
+    if (!isset($vocab_names) || empty($vocab_names)) {
       throw new ErrorException('Missing vocab definition in configuration.');
     }
-
     $this->text = $text;
     if (mb_detect_encoding($this->text) != 'UTF-8') {
       $this->text = utf8_encode($this->text);
@@ -36,11 +30,11 @@ class TagController {
        throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
 
-    if (!empty($ner) && preg_match_all('/(' . implode('|', $conf['vocab_names']) . ')+[\ ]?/', $ner, $matches)) {
-      $this->ner_vocabs = array_intersect_key(array_flip($conf['vocab_names']), array_flip($matches[1]));
+    if (!empty($ner) && preg_match_all('/(' . implode('|', $vocab_names) . ')+[\ ]?/', $ner, $matches)) {
+      $this->ner_vocabs = array_intersect_key(array_flip($vocab_names), array_flip($matches[1]));
     }
     else {
-      $this->ner_vocabs = array_flip($conf['vocab_names']);
+      $this->ner_vocabs = array_flip($vocab_names);
     }
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
@@ -102,12 +96,13 @@ class TagController {
     }
   }
   private function fetchUris($tid) {
-    global $conf;
+    $tagger_instance = Tagger::getTagger();
     $sql = sprintf("SELECT dstid, uri FROM linked_data_sources WHERE tid = %s ORDER BY dstid ASC", $tid);
     $result = DatabaseBuddy::query($sql);
     $uris = array();
+    $lod_sources = $tagger_instance->getSetting('lod_sources');
     while ($row = mysql_fetch_assoc($result)) {
-      $uris[$conf['lod_sources'][$row['dstid']]] = $row['uri'];
+      $uris[$lod_sources[$row['dstid']]] = $row['uri'];
     }
     return $uris;
   }

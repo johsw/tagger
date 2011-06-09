@@ -1,5 +1,4 @@
 <?php
-require_once 'DatabaseBuddy.inc.php';
 
 abstract class Matcher {
   protected $matches;
@@ -20,8 +19,8 @@ abstract class Matcher {
   }
 
   protected function term_query($word_arr) {
-    global $conf;
-    $vocab_names = $conf['vocab_names'];
+    $tagger_instance = Tagger::getTagger();
+    $vocab_names = $tagger_instance->getSetting('vocab_names');
     if (!empty($this->vocabularies) && !empty($word_arr)) {
       $imploded_words = implode("','", $word_arr);
       $unmatched = array_flip($word_arr);
