@@ -8,11 +8,11 @@
 class Retriever {
 
   public $updates;
-  
+
   function __construct() {
     $this->updates = $this->get_latest_updates();
   }
-  
+
   public function get_latest_updates() {
     global $conf;
     $updates = array();
@@ -23,16 +23,16 @@ class Retriever {
       if ($this->has_update_minimal_interval_passed($url, $options)) {
         $updates[$url] = $this->fetch_remote_updates($url, $options);
       }
-      
+
     }
     return $updates;
   }
-  
+
   public function set_variable($name, $value) {
     $sql = sprintf("REPLACE INTO variables SET name='%s', value='%s'", $name, $value);
     return DatabaseBuddy::query($sql);
   }
-  
+
   public function get_variable($name) {
     $sql = sprintf("SELECT value FROM variables WHERE name='%s'", $name);
     $result = DatabaseBuddy::query($sql);
@@ -40,13 +40,13 @@ class Retriever {
       $this->check_database_table('variables');
       return TRUE;
     }
-    $obj = mysql_fetch_object($result);
-    if (!$obj) { 
+    $object = mysql_fetch_object($result);
+    if (!$object) {
       return false;
     }
-    return $obj->value;
+    return $object->value;
   }
-  
+
   public function has_update_minimal_interval_passed($url, $options) {
     $value = $this->get_variable('last_request:'.$url);
     if (!$value) {
@@ -55,10 +55,9 @@ class Retriever {
     return ($value + $options['min_interval']) < time();
   }
   public function set_update_timestamp($url, $options) {
-    
+
   }
-  
-  
+
   public function check_database_table($table) {
     $result = DatabaseBuddy::query("SHOW TABLES like 'variables'");
     $object = mysql_fetch_object($result);
@@ -106,7 +105,7 @@ class Retriever {
     //TODO: return 
     return $value;
   }
-  
+
   public function update_error($error, $fatal = FALSE) {
     print "\n";
     print "-------\n";

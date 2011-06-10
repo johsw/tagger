@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once 'defaults.php';
 require_once 'conf.php';
