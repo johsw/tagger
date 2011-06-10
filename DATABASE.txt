@@ -2,10 +2,10 @@
 -- --------------------------------------------------------
 
 --
--- Table structure for table `canonical`
+-- Table structure for table `term_data`
 --
 
-CREATE TABLE `canonical` (
+CREATE TABLE `term_data` (
   `tid` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `vid` int(10) unsigned NOT NULL DEFAULT '0',
   `name` varchar(255) NOT NULL DEFAULT '',
@@ -35,10 +35,10 @@ CREATE TABLE `linked_data_sources` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lookup`
+-- Table structure for table `term_synonym`
 --
 
-CREATE TABLE `lookup` (
+CREATE TABLE `term_synonym` (
   `tid` int(10) NOT NULL,
   `vid` int(10) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -48,10 +48,10 @@ CREATE TABLE `lookup` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `relations`
+-- Table structure for table `term_relations`
 --
 
-CREATE TABLE `relations` (
+CREATE TABLE `term_relations` (
   `tid` int(10) NOT NULL,
   `rtid` int(10) NOT NULL,
   UNIQUE KEY `rtid_tid` (`tid`,`rtid`),
@@ -65,7 +65,7 @@ CREATE TABLE `relations` (
 -- Table structure for table `unmatched`
 --
 
-CREATE TABLE `unmatched` (
+CREATE TABLE `tagger_unmatched_terms` (
   `name` varchar(255) NOT NULL,
   `count` int(11) NOT NULL,
   `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

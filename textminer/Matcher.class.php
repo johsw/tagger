@@ -18,14 +18,14 @@ abstract class Matcher {
     $this->vocabularies = implode(', ', $vocab_array);
   }
 
-  protected function term_query($word_arr) {
+  protected function term_query() {
     $tagger_instance = Tagger::getTagger();
     $vocab_names = $tagger_instance->getSetting('vocab_names');
-    if (!empty($this->vocabularies) && !empty($word_arr)) {
-      $imploded_words = implode("','", $word_arr);
-      $unmatched = array_flip($word_arr);
+    if (!empty($this->vocabularies) && !empty($this->search_items)) {
+      $imploded_words = implode("','", $this->search_items);
+      $unmatched = array_flip($this->search_items);
 
-      $sql = sprintf("SELECT l.name AS matchword, c.name AS name, l.vid, l.tid, COUNT(l.tid) AS count FROM lookup AS l JOIN canonical AS c ON c.tid = l.tid  WHERE l.vid IN (%s) AND BINARY l.name IN('%s') GROUP BY BINARY l.name", $this->vocabularies, $imploded_words);
+      $sql = sprintf("SELECT tid, name, vid FROM term_data WHERE vid IN(%s) AND (name IN('%s') OR tid IN(SELECT tid FROM term_synonym WHERE name IN('%s'))) GROUP BY BINARY name", $this->vocabularies, $imploded_words, $imploded_words);
       $result = DatabaseBuddy::query($sql);
 
       while ($row = mysql_fetch_assoc($result)) {
