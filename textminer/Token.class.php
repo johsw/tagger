@@ -11,7 +11,7 @@ class Token {
   public function __construct($text) {
     $this->text = trim($text);
     if (NULL == self::$initwords) {
-      $initwords_path = realpath('resources/initwords.txt');
+      $initwords_path = realpath(TAGGER_DIR .'/resources/initwords.txt');
       self::$initwords = file($initwords_path, FILE_IGNORE_NEW_LINES);
     }
   }

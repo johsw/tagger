@@ -1,6 +1,6 @@
 <?php
 
-require_once 'Matcher.class.php';
+require_once 'textminer/Matcher.class.php';
 
 class NamedEntityMatcher extends Matcher {
 
