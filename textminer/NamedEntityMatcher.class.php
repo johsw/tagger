@@ -18,8 +18,7 @@ class NamedEntityMatcher extends Matcher {
     }
     // Get rid of the plurals in the search candidates.
     $this->search_items = array_merge($this->search_items, $this->possible_plurals);
-
-    $this->term_query($this->search_items);
+    $this->term_query();
   }
   
   private function match_plurals() {

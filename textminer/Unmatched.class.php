@@ -10,7 +10,7 @@ class Unmatched {
   }
 
   public function logUnmatched() {
-    foreach($this->unmatched AS $word) {
+    foreach($this->unmatched as $word) {
       if (!empty($word)) {
         if ($this->wordHasBeenLogged($word)) {
           $this->incrementWordCount($word);
@@ -21,17 +21,17 @@ class Unmatched {
     }
   }
   private function wordHasBeenLogged($word) {
-    $sql = sprintf("SELECT count FROM unmatched WHERE name = '%s';", $word);
+    $sql = sprintf("SELECT count FROM tagger_unmatched_terms WHERE name = '%s';", $word);
     $result = DatabaseBuddy::query($sql);
     $row = mysql_fetch_assoc($result);
     return (bool)$row;
   }
   private function logNewWord($word) {
-    $sql = sprintf("INSERT INTO unmatched SET name = '%s', count = 1, created = CURRENT_TIMESTAMP", $word);
+    $sql = sprintf("INSERT INTO tagger_unmatched_terms SET name = '%s', count = 1, created = CURRENT_TIMESTAMP", $word);
     $result = DatabaseBuddy::query($sql);
   }
   private function incrementWordCount($word) {
-    $sql = sprintf("UPDATE unmatched SET count = count+1, updated = CURRENT_TIMESTAMP WHERE name ='%s';", $word);
+    $sql = sprintf("UPDATE tagger_unmatched_terms SET count = count+1, updated = CURRENT_TIMESTAMP WHERE name ='%s';", $word);
     $result = DatabaseBuddy::query($sql);
   }
 

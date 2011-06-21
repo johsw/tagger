@@ -30,8 +30,13 @@ class TagController {
        throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
 
-    if (!empty($ner) && preg_match_all('/(' . implode('|', $vocab_names) . ')+[\ ]?/', $ner, $matches)) {
-      $this->ner_vocabs = array_intersect_key(array_flip($vocab_names), array_flip($matches[1]));
+    if (!empty($ner)) {
+      if (is_array($ner)) {
+        $this->ner_vocabs = array_flip($ner);
+      }
+      elseif (!empty($ner) && preg_match_all('/(' . implode('|', $vocab_names) . ')+[\ ]?/', $ner, $matches)) {
+        $this->ner_vocabs = array_intersect_key(array_flip($vocab_names), array_flip($matches[1]));
+      }
     }
     else {
       $this->ner_vocabs = array_flip($vocab_names);
