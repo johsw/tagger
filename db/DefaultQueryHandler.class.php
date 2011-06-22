@@ -1,6 +1,6 @@
 <?php
 
-class DatabaseBuddy implements TaggerQuery {
+class DefaultQueryHandler implements TaggerQuery {
   private $link = NULL;
   private $instance = NULL;
   private function __construct() {
