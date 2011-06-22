@@ -25,15 +25,17 @@ abstract class Matcher {
     if (!empty($this->vocabularies) && !empty($this->search_items)) {
       $imploded_words = implode("','", $this->search_items);
       $unmatched = array_flip($this->search_items);
-      $result = TaggerQueryManager::query("SELECT tid, name, vid FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN(SELECT tid FROM term_synonym WHERE name IN('$imploded_words'))) GROUP BY BINARY name");
+      $result = TaggerQueryManager::query("SELECT COUNT(tid) AS count, tid, name, vid FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN(SELECT tid FROM term_synonym WHERE name IN('$imploded_words'))) GROUP BY BINARY name");
       while ($row = mysqli_fetch_assoc($result)) {
         if (array_key_exists($row['name'], $unmatched)) {
           unset($unmatched[$row['name']]);
+          $matchword = $row['name'];
         }
         if (isset($row['synonym']) && array_key_exists($row['synonym'], $unmatched)) {
           unset($unmatched[$row['synonym']]);
+          $matchword = $row['synonym'];
         }
-        $this->matches[$row['vid']][$row['tid']] = array('navn' => $row['name'], 'match' => $row['matchword'], 'hits' => $row['count']);
+        $this->matches[$row['vid']][$row['tid']] = array('navn' => $row['name'], 'match' => $matchword, 'hits' => $row['count']);
       }
       $this->nonmatches = array_flip($unmatched);
     }
