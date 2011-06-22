@@ -5,22 +5,30 @@ class Tagger {
   private static $instance;
 
   private $conf_settings;
+  
+  private $configuration;
     
-  private function __construct()  {
+  private function __construct($configuration)  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
     define('TAGGER_DIR', dirname(__FILE__));
+    define('TAGGER_DB_CONF', $configuration);
     include 'conf.php';
-    include 'textminer/DatabaseBuddy.inc.php';
+    include 'db/Query.class.php';
     include 'controllers/TagController.inc.php';
     $this->conf_settings = $tagger_conf;
+    $this->configuration = $configuration;
   }
 
-  public static function getTagger() {
+  public static function getTagger($configuration) {
     if (!isset(self::$instance)) {
         $c = __CLASS__;
         self::$instance = new $c;
     }
     return self::$instance;
+  }
+
+  public function getConfiguration() {
+    return $this->configuration;
   }
 
   // Prevent users to clone the instance
@@ -38,7 +46,7 @@ class Tagger {
   }
 
   public function tagText($text, $ner, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
-    $controller = new TagController($text, $ner, $disambiguate, $return_uris, $return_unmatched, $use_markup, $nl2br);
+    $controller = new TagController($this->configuration, $text, $ner, $disambiguate, $return_uris, $return_unmatched, $use_markup, $nl2br);
     $controller->process();
     return $controller->getProcessedResponse();
   }

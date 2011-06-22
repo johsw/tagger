@@ -1,19 +1,8 @@
 <?php
-/**
- * This file handles the calls to the database. To use it, make a file called
- * conf.php in the root of this install. The file needs to contain the server,
- * username and password in a format like this:
- *
- * <?php
- *  $tagger_conf['db]['name'] = 'db name';
- *  $tagger_conf['db]['server'] = 'servername';
- *  $tagger_conf['db]['username'] = 'yourusername';
- *  $tagger_conf['db]['password'] = 'yourpassword';
- * ?>
- */
 
-class DatabaseBuddy {
+class DatabaseBuddy implements TaggerQuery {
   private $link = NULL;
+  private $instance = NULL;
   private function __construct() {
     $tagger_instance = Tagger::getTagger();
     $db_settings = $tagger_instance->getSetting('db');
@@ -30,12 +19,16 @@ class DatabaseBuddy {
   public function __destruct() {
     $this->link = NULL;
   }
-
-  public static function query($query) {
-    static $static_link = NULL;
-    if (NULL == $static_link) {
-      $static_link = new DatabaseBuddy();
+  
+  public static function instance() {
+    if (!isset(self::$instance)) {
+      $c = __CLASS__;
+      self::$instance = new $c;
     }
-    return mysql_query($query, $static_link->link);
+    return self::$instance;
+  }
+
+  public function taggerQuery($sql, $args) {
+    return mysql_query(sprintf($sql, $args), $static_link->link);
   }
 }

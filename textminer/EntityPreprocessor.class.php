@@ -4,13 +4,15 @@ require_once 'textminer/Token.class.php';
 require_once 'textminer/NamedEntityMatcher.class.php';
 
 class EntityPreprocessor {
+  private $configuration;
+
   private $tokens;
   private $named_entities;
 
   private $ner_matcher;
   private $ner_vocabs;
 
-  public function __construct($text, $ner_vocabs) {
+  public function __construct($configuration, $text, $ner_vocabs) {
     $text = str_replace("\n", " __newline__ ", $text);
     $text = str_replace("\r", " __newline__ ", $text);
     $this->tokens = preg_split("/([\s\?,\":\.«»'\(\)\!])/", trim($text), -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -29,7 +31,7 @@ class EntityPreprocessor {
     // Make sure the named entities have been created.
     $this->get_potential_named_entities();
 
-    $this->ner_matcher = new NamedEntityMatcher($this->named_entities, $this->ner_vocabs);
+    $this->ner_matcher = new NamedEntityMatcher($this->configuration, $this->named_entities, $this->ner_vocabs);
     $this->ner_matcher->match();
     return $this->ner_matcher->get_matches();
   }

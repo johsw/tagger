@@ -1,6 +1,8 @@
 <?php
 
 abstract class Matcher {
+  protected $configuration;
+
   protected $matches;
   protected $numresults = 0;
   protected $search_items;
@@ -25,8 +27,7 @@ abstract class Matcher {
       $imploded_words = implode("','", $this->search_items);
       $unmatched = array_flip($this->search_items);
 
-      $sql = sprintf("SELECT tid, name, vid FROM term_data WHERE vid IN(%s) AND (name IN('%s') OR tid IN(SELECT tid FROM term_synonym WHERE name IN('%s'))) GROUP BY BINARY name", $this->vocabularies, $imploded_words, $imploded_words);
-      $result = DatabaseBuddy::query($sql);
+      $result = TaggerQueryManager::getQueryManager($tagger_instance->getConfiguration())->query("SELECT tid, name, vid FROM term_data WHERE vid IN(%s) AND (name IN('%s') OR tid IN(SELECT tid FROM term_synonym WHERE name IN('%s'))) GROUP BY BINARY name", array($this->vocabularies, $imploded_words, $imploded_words));
 
       while ($row = mysql_fetch_assoc($result)) {
         if (array_key_exists($row['name'], $unmatched)) {

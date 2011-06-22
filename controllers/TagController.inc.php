@@ -4,6 +4,8 @@ require_once 'textminer/EntityPreprocessor.class.php';
 require_once 'textminer/Unmatched.class.php';
 
 class TagController {
+  
+  private $configuration;
 
   private $ner_vocabs;
   private $text;
@@ -15,13 +17,9 @@ class TagController {
   private $return_unmatched = FALSE;
   private $disambiguate = FALSE;
 
-  public function __construct($text, $ner, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
+  public function __construct($configuration, $text, $ner, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
 
-    $tagger_instance = Tagger::getTagger();
-    $vocab_names = $tagger_instance->getSetting('vocab_names');
-    if (!isset($vocab_names) || empty($vocab_names)) {
-      throw new ErrorException('Missing vocab definition in configuration.');
-    }
+    $this->configuration = $configuration;
     $this->text = $text;
     if (mb_detect_encoding($this->text) != 'UTF-8') {
       $this->text = utf8_encode($this->text);
@@ -39,6 +37,11 @@ class TagController {
       }
     }
     else {
+      $tagger_instance = Tagger::getTagger();
+      $vocab_names = $tagger_instance->getSetting('vocab_names');
+      if (!isset($vocab_names) || empty($vocab_names)) {
+        throw new ErrorException('Missing vocab definition in configuration.');
+      }
       $this->ner_vocabs = array_flip($vocab_names);
     }
     $this->disambiguate = $disambiguate;
@@ -49,7 +52,7 @@ class TagController {
   }
 
   public function process() {
-    $entityPreprocessor = new EntityPreprocessor(strip_tags($this->text), $this->ner_vocabs, array());
+    $entityPreprocessor = new EntityPreprocessor($this->configuration, strip_tags($this->text), $this->ner_vocabs, array());
     $this->tag_array = $entityPreprocessor->get_named_entity_matched_tags();
     $unmatched_words = $entityPreprocessor->get_nonmatches();
     $unmatched = new Unmatched($unmatched_words);
