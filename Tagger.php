@@ -13,7 +13,7 @@ class Tagger {
     define('TAGGER_DIR', dirname(__FILE__));
     include 'defaults.php';
     $tagger_conf = array_merge($tagger_conf, $configuration);
-    if (!isset($configuration)) {
+    if (!isset($configuration) || empty($configuration)) {
       include 'conf.php';
     }
     include 'classes/TaggerController.inc.php';
