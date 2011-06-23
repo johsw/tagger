@@ -28,7 +28,7 @@ class Tagger {
     return self::$instance;
   }
 
-  public function getConfiguration($setting) {
+  public function getConfiguration($setting = NULL) {
     if (isset($this->configuration[$setting])) {
       return $this->configuration[$setting];
     }
