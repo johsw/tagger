@@ -48,10 +48,10 @@ class Disambiguator {
   }
   public function getRelatedTags($tag) {
     $tagger_instance = Tagger::getTagger();
-    $vocabularies = implode(',', array_keys($tagger_instance->getSetting('vocab_names')));
+    $vocabularies = implode(',', array_keys($tagger_instance->getConfiguration('vocab_names')));
     $sql = sprintf("SELECT l.tid, l.name, GROUP_CONCAT(r.rtid SEPARATOR ', ') AS rtids FROM term_synonym AS l LEFT JOIN term_relations AS r ON l.tid = r.tid WHERE l.vid IN (%s) AND l.name = '%s' GROUP BY l.tid", $vocabularies, $tag['navn']);
     $matches = array();
-    $result = DatabaseBuddy::query($sql);
+    $result = TaggerQueryManager::query($sql);
     if ($result) { 
       while ($row = mysql_fetch_assoc($result)) {
         $matches[$row['tid']] = explode(',', $row['rtids']);
@@ -63,7 +63,7 @@ class Disambiguator {
   public function getVocabulary($tid) {
     $tagger_instance = Tagger::getTagger();
     $sql = sprintf("SELECT c.vid FROM term_data AS c WHERE c.tid = %s LIMIT 0,1", $tid);
-    $result = DatabaseBuddy::query($sql);
+    $result = TaggerQueryManager::query($sql);
     $row = mysql_fetch_assoc($result);
     $vocab_names = $tagger_instance->getSetting('vocab_names');
     return $vocab_names[$row['vid']];

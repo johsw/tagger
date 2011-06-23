@@ -26,16 +26,23 @@ class TaggerController {
     }
 
     if (!empty($ner)) {
+      $tagger_instance = Tagger::getTagger();
+      $vocab_names = $tagger_instance->getConfiguration('vocab_names');
       if (is_array($ner)) {
         $this->ner_vocabs = array_flip($ner);
       }
-      elseif (!empty($ner) && preg_match_all('/(' . implode('|', $vocab_names) . ')+[\ ]?/', $ner, $matches)) {
-        $this->ner_vocabs = array_intersect_key(array_flip($vocab_names), array_flip($matches[1]));
+      elseif (is_string($ner) && !strpos($ner, '|')) {
+        $this->ner_vocabs = array($ner => $ner);
+      }
+      elseif (is_string($ner) && strpos($ner, '|')) {
+        $vocabs = explode('|', $ner);
+        $this->ner_vocabs = array_flip($vocabs);
+
       }
     }
     else {
       $tagger_instance = Tagger::getTagger();
-      $vocab_names = $tagger_instance->getSetting('vocab_names');
+      $vocab_names = $tagger_instance->getConfiguration('vocab_names');
       if (!isset($vocab_names) || empty($vocab_names)) {
         throw new ErrorException('Missing vocab definition in configuration.');
       }
@@ -61,6 +68,7 @@ class TaggerController {
       //TODO - Process and return unmatched entities
     }
     if ($this->disambiguate) {
+      require_once 'classes/Disambiguator.class.php';
       $disambiguator = new Disambiguator($this->tag_array);
       $this->tag_array = $disambiguator->disambiguate();
     }

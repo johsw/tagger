@@ -6,7 +6,7 @@
     'username' => '<username>',
     'password' => '<password>',
   );
-
+  $tagger_conf['dbhandler'] = 'Default';
   // Data sources for open linked data.
   $tagger_conf['lod_sources'] = array(
     1 => 'DBpedia',
