@@ -6,12 +6,7 @@
     'username' => '<username>',
     'password' => '<password>',
   );
-  // Names and ids of your vocabularies.
-  $tagger_conf['vocab_names'] = array(
-    13 => 'personer',
-    17 => 'steder',
-    15 => 'organisationer',
-  );
+
   // Data sources for open linked data.
   $tagger_conf['lod_sources'] = array(
     1 => 'DBpedia',
