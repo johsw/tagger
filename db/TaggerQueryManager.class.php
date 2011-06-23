@@ -7,7 +7,7 @@ class TaggerQueryManager {
   }
 
   public static function query($sql, $args = array()) {
-    
+
     $tagger_instance = Tagger::getTagger();
     $dbhandler = $tagger_instance->getConfiguration('dbhandler');
     if (!isset($dbhandler) || (isset($dbhandler) && $dbhandler == 'Default')) {

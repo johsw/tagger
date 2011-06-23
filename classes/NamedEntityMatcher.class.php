@@ -20,7 +20,7 @@ class NamedEntityMatcher extends Matcher {
     $this->search_items = array_merge($this->search_items, $this->possible_plurals);
     $this->term_query();
   }
-  
+
   private function match_plurals() {
 
     $this->possible_plurals = array_filter($this->search_items, create_function('$str', 'return (substr($str, -1) == "s");'));

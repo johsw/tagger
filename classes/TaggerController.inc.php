@@ -4,7 +4,7 @@ require_once 'classes/EntityPreprocessor.class.php';
 require_once 'classes/Unmatched.class.php';
 
 class TaggerController {
-  
+
   private $ner_vocabs;
   private $text;
   private $tag_array;

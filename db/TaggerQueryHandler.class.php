@@ -1,7 +1,7 @@
 <?php
 
 class TaggerQueryHandler {
-  
+
   private static $link = NULL;
   private static $instance = NULL;
   private function __construct() {
@@ -19,7 +19,7 @@ class TaggerQueryHandler {
   public function __destruct() {
     $this->link = NULL;
   }
-  
+
 
   public function query($sql, $args) {
     if (!isset(self::$instance)) {
