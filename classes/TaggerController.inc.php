@@ -116,10 +116,10 @@ class TaggerController {
   private function fetchUris($tid) {
     $tagger_instance = Tagger::getTagger();
     $sql = sprintf("SELECT dstid, uri FROM linked_data_sources WHERE tid = %s ORDER BY dstid ASC", $tid);
-    $result = DatabaseBuddy::query($sql);
+    $result = TaggerQueryManager::query($sql);
     $uris = array();
-    $lod_sources = $tagger_instance->getSetting('lod_sources');
-    while ($row = mysql_fetch_assoc($result)) {
+    $lod_sources = $tagger_instance->getConfiguration('lod_sources');
+    while ($row = mysqli_fetch_assoc($result)) {
       $uris[$lod_sources[$row['dstid']]] = $row['uri'];
     }
     return $uris;
