@@ -1,11 +1,21 @@
 <?php
   // Database connectiviy info.
-  $tagger_conf['db'] = array(
-    'name' => '<database name>',
-    'server' => '<server>',
-    'username' => '<username>',
-    'password' => '<password>',
-  );
+  $tagger_conf['db']['type'] = 'dbtype'; // sqlite mysql mssql
+
+  // SQLite only
+  $tagger_conf['db']['dsn'] = $conf['db']['type'].':/path/to/database.db';
+
+  // Anything not SQLite
+  if($tagger_conf['db']['type'] != 'sqlite') {
+    $tagger_conf['db'] = array(
+      'name' => '<database name>',
+      'server' => '<server>',
+      'username' => '<username>',
+      'password' => '<password>',
+    );
+    $tagger_conf['db']['dsn'] = $conf['db']['type'].':dbname='.$conf['db']['name'].';host='.$conf['db']['server'];
+  }
+
   // Names and ids of your vocabularies.
   $tagger_conf['vocab_names'] = array(
     13 => 'personer',
