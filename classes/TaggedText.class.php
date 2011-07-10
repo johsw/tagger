@@ -1,12 +1,14 @@
 <?php
 
 require_once 'classes/EntityPreprocessor.class.php';
+require_once 'classes/HTMLPreprocessor.class.php';
 require_once 'classes/Unmatched.class.php';
 
-class TaggerController {
+class TaggedText {
 
-  private $ner_vocabs;
   private $text;
+  private $rating;
+  private $ner_vocab_ids;
   private $tag_array;
   private $markedup_text;
   private $use_markup = FALSE;
@@ -15,38 +17,44 @@ class TaggerController {
   private $return_unmatched = FALSE;
   private $disambiguate = FALSE;
 
-  public function __construct($text, $ner, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
+  /**
+   * Constructs a TaggedText object.
+   *
+   * @param string $text
+   *   Text to be tagged.
+   * @param array $rating
+   *   An associative array containing one more of the keys:
+   *     - frequency
+   *     - position
+   *     - tags
+   *   Where each has a value between 0 and 1 to indicate the weighting of each
+   *   rating method.
+   * @param array $ner_vocab_ids
+   *   The database-IDs of the vocabularies to be used.
+   */
+  public function __construct($text, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
 
+    if (empty($text)) {
+      throw new InvalidArgumentException('No text to find tags in has been supplied.');
+    }
+
+    $tagger_instance = Tagger::getTagger();
+
+    // Change encoding if necessary.
     $this->text = $text;
     if (mb_detect_encoding($this->text) != 'UTF-8') {
       $this->text = utf8_encode($this->text);
     }
-    if (empty($this->text)) {
-       throw new InvalidArgumentException('No text to find tags in has been supplied.');
-    }
 
-    if (!empty($ner)) {
-      $tagger_instance = Tagger::getTagger();
-      $vocab_names = $tagger_instance->getConfiguration('vocab_names');
-      if (is_array($ner)) {
-        $this->ner_vocabs = array_flip($ner);
-      }
-      elseif (is_string($ner) && !strpos($ner, '|')) {
-        $this->ner_vocabs = array($ner => $ner);
-      }
-      elseif (is_string($ner) && strpos($ner, '|')) {
-        $vocabs = explode('|', $ner);
-        $this->ner_vocabs = array_flip($vocabs);
-
-      }
+    if (!empty($ner_vocab_ids)) {
+      $this->ner_vocab_ids = $ner_vocab_ids;
     }
     else {
-      $tagger_instance = Tagger::getTagger();
-      $vocab_names = $tagger_instance->getConfiguration('vocab_names');
-      if (!isset($vocab_names) || empty($vocab_names)) {
+      $vocab_ids = $tagger_instance->getConfiguration('ner_vocab_ids');
+      if (!isset($vocab_ids) || empty($vocab_ids)) {
         throw new ErrorException('Missing vocab definition in configuration.');
       }
-      $this->ner_vocabs = array_flip($vocab_names);
+      $this->ner_vocab_ids = $vocab_ids;
     }
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
@@ -56,9 +64,22 @@ class TaggerController {
   }
 
   public function process() {
+
+    $tagger_instance = Tagger::getTagger();
+
+    $rating['HTML'] = true;
+    // Make HTML rating
+    if($rating['HTML']) {
+      //echo "\n--------------HTML--------------\n";
+      $HTMLPreprocessor = new HTMLPreprocessor($this->text);
+      $HTMLPreprocessor->parse();
+      //print_r($HTMLPreprocessor->tokens);
+      //echo "--------------HTML-END----------\n";
+    }
+
     $entityPreprocessor = new EntityPreprocessor(strip_tags($this->text));
     $potentialCandidates = $entityPreprocessor->get_potential_named_entities();
-    $ner_matcher = new NamedEntityMatcher($potentialCandidates, $this->ner_vocabs);
+    $ner_matcher = new NamedEntityMatcher($potentialCandidates, $this->ner_vocab_ids);
     $ner_matcher->match();
     $this->tag_array = $ner_matcher->get_matches();
     if (FALSE != $this->return_unmatched) {

@@ -8,6 +8,8 @@ class NamedEntityMatcher extends Matcher {
 
   function __construct($text, $ner_vocabs) {
     parent::__construct($text, $ner_vocabs);
+    //echo "\n NER-MATCHER \n";
+    //print_r($text);
   }
 
   public function match() {

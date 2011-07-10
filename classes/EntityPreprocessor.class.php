@@ -29,12 +29,11 @@ class EntityPreprocessor {
     for ($i = 0, $n = count($this->tokens); $i < $n; $i++) {
       $entity = NULL;
       $token = new Token($this->tokens[$i]);
-      // If the token is uppercase, maybe it is a name or a place.
 
+      // If the token is uppercase, maybe it is a name or a place.
       if ($token->isUpperCase() && !$token->isStopWord() && !$token->isInitWord()) {
 
         $entity = array($token->getText());
-
         // Look two words ahead.
         if (isset($this->tokens[$i +2])) {
         $next = new Token($this->tokens[$i +2]);
