@@ -2,9 +2,6 @@
   // Database connectiviy info.
   $tagger_conf['db']['type'] = 'dbtype'; // sqlite mysql mssql
 
-  // SQLite only
-  $tagger_conf['db']['dsn'] = $conf['db']['type'].':/path/to/database.db';
-
   // Anything not SQLite
   if($tagger_conf['db']['type'] != 'sqlite') {
     $tagger_conf['db'] = array(
@@ -12,8 +9,9 @@
       'server' => '<server>',
       'username' => '<username>',
       'password' => '<password>',
+      'type' => $tagger_conf['db']['type'],
     );
-    $tagger_conf['db']['dsn'] = $conf['db']['type'].':dbname='.$conf['db']['name'].';host='.$conf['db']['server'];
+    
   }
 
   // Names and ids of your vocabularies.
@@ -34,4 +32,4 @@
   // The hostnames of the sites that you would like to be allowed to call the
   // webservice. Leave an empty array if you want to allow access for all.
   $tagger_conf['service_allow_referer'] = array('tagger.dk');
-?>
+
