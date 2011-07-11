@@ -12,6 +12,11 @@
       'type' => $tagger_conf['db']['type'],
     );
     
+  } else {
+    $tagger_conf['db'] = array(
+      'path' => '<path to database>',
+      'type' => $tagger_conf['db']['type'],
+    );
   }
 
   // Names and ids of your vocabularies.
