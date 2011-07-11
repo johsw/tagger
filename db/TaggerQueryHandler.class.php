@@ -45,6 +45,5 @@ class TaggerQueryHandler {
       $error_msg = self::$instance->link->errorInfo();
       die('Database error: '. $error_msg[2] . "\n" . 'Query: ' . $sql);
     }
-    //return self::$instance->link->query(sprintf($sql, $args));
   }
 }
