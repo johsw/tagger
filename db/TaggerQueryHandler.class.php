@@ -16,7 +16,7 @@ class TaggerQueryHandler {
                               array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
       } else {
         // SQLite only
-        $db_settings['dsn'] = $db_settings['type'] .':/path/to/database.db';
+        $db_settings['dsn'] = $db_settings['type'] .':'. $db_settings['path'];
         $this->link = new PDO($db_settings['dsn'], '', '',
                               array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
       }
