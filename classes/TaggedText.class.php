@@ -67,7 +67,7 @@ class TaggedText {
   public function process() {
 
     // Make HTML rating
-    if($this->taggerInstance->getConfiguration['HTML_rating']) {
+    if($this->taggerInstance->getConfiguration('HTML_rating')) {
       $HTMLPreprocessor = new HTMLPreprocessor($this->text);
       $HTMLPreprocessor->parse();
       $tokens = $HTMLPreprocessor->tokens;
