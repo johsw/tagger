@@ -1,42 +1,45 @@
 <?php
 
 require_once 'classes/Tokenizer.class.php';
-require_once '../wiseparser/treebuilder.php';
 
 class HTMLPreprocessor {
   private $text;
-  private $rootElement;
+  private $html;
+  private $dom;
   private $named_entities;
 
   public $tokens;
 
   public function __construct($text) {
     $this->text = $text;
+    $this->html = '<?xml encoding="UTF-8">' .  $text;
   }
 
   public function parse() {
-    $this->rootElement = new Tree();
-    $this->rootElement->parse_content($this->text);
-    $this->rateElement($this->rootElement, 0);
+    $this->dom = new DOMDocument("1.0", "UTF-8");
+    $this->dom->loadHTML($this->html);
+    $this->rateElement($this->dom, 0);
   }
 
   public function rateElement($element, $cur_rating) {
     $tagger_instance = Tagger::getTagger();
     $tag_ratings = $tagger_instance->getConfiguration('HTML_tags');
 
-    foreach($element->children as $child) {
-      if(is_string($child)) {
-        //echo "Child: " . $child . "\n";
-        $tokenizer = new Tokenizer($child);
-        //echo "Tokens: ";
-        //print_r($tokenizer->tokens);
-        //echo "\n";
-        foreach($tokenizer->tokens as $token) {
-          $this->tokens[] = array($token, $cur_rating);
-        }
+    echo "Tag: " . $element->nodeName . "\n";
+
+    if($element->nodeName == '#text') {
+      //echo "Child: " . $child . "\n";
+      $tokenizer = new Tokenizer($element->textContent);
+      //echo "Tokens: ";
+      foreach($tokenizer->tokens as $token) {
+        $token->htmlRating = $cur_rating;
+        $this->tokens[] = $token;
       }
-      else {
-        $this->rateElement($child, $cur_rating + $tag_ratings[$child->tag]);
+    }
+
+    if($element->hasChildNodes()) {
+      foreach($element->childNodes as $child) {
+        $this->rateElement($child, $cur_rating + $tag_ratings[$child->nodeName]);
       }
     }
   }

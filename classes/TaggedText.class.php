@@ -70,14 +70,19 @@ class TaggedText {
     $rating['HTML'] = true;
     // Make HTML rating
     if($rating['HTML']) {
-      //echo "\n--------------HTML--------------\n";
+      echo "\n--------------HTML--------------\n";
       $HTMLPreprocessor = new HTMLPreprocessor($this->text);
       $HTMLPreprocessor->parse();
-      //print_r($HTMLPreprocessor->tokens);
-      //echo "--------------HTML-END----------\n";
+      $tokens = $HTMLPreprocessor->tokens;
+      echo "--------------HTML-END----------\n";
     }
+    else {
+      $tokenizer = new Tokenizer(strip_tags($this->text));
+      $tokens = $tokenizer->tokens;
+    }
+    print_r($tokens);
 
-    $entityPreprocessor = new EntityPreprocessor(strip_tags($this->text));
+    $entityPreprocessor = new EntityPreprocessor($tokens);
     $potentialCandidates = $entityPreprocessor->get_potential_named_entities();
     $ner_matcher = new NamedEntityMatcher($potentialCandidates, $this->ner_vocab_ids);
     $ner_matcher->match();

@@ -8,6 +8,10 @@ class Token {
 
   private $text;
 
+  public $freqRating;
+  public $posRating;
+  public $htmlRating;
+
   public function __construct($text) {
     $this->text = trim($text);
     if (NULL == self::$initwords) {
@@ -37,5 +41,9 @@ class Token {
 
   public function isPrefixOrInfix() {
     return in_array(mb_strtolower($this->text), self::$prefix_or_infix);
+  }
+
+  public function __toString() {
+    return $this->text;
   }
 }
