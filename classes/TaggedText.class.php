@@ -16,6 +16,7 @@ class TaggedText {
   private $return_uris = FALSE;
   private $return_unmatched = FALSE;
   private $disambiguate = FALSE;
+  private $taggerInstance;
 
   /**
    * Constructs a TaggedText object.
@@ -38,7 +39,7 @@ class TaggedText {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
 
-    $tagger_instance = Tagger::getTagger();
+    $this->taggerInstance = Tagger::getTagger();
 
     // Change encoding if necessary.
     $this->text = $text;
@@ -50,7 +51,7 @@ class TaggedText {
       $this->ner_vocab_ids = $ner_vocab_ids;
     }
     else {
-      $vocab_ids = $tagger_instance->getConfiguration('ner_vocab_ids');
+      $vocab_ids = $this->taggerInstance->getConfiguration('ner_vocab_ids');
       if (!isset($vocab_ids) || empty($vocab_ids)) {
         throw new ErrorException('Missing vocab definition in configuration.');
       }
@@ -65,25 +66,21 @@ class TaggedText {
 
   public function process() {
 
-    $tagger_instance = Tagger::getTagger();
-
-    $rating['HTML'] = true;
     // Make HTML rating
-    if($rating['HTML']) {
-      echo "\n--------------HTML--------------\n";
+    if($this->taggerInstance->getConfiguration['HTML_rating']) {
       $HTMLPreprocessor = new HTMLPreprocessor($this->text);
       $HTMLPreprocessor->parse();
       $tokens = $HTMLPreprocessor->tokens;
-      echo "--------------HTML-END----------\n";
     }
     else {
       $tokenizer = new Tokenizer(strip_tags($this->text));
       $tokens = $tokenizer->tokens;
     }
-    print_r($tokens);
 
     $entityPreprocessor = new EntityPreprocessor($tokens);
     $potentialCandidates = $entityPreprocessor->get_potential_named_entities();
+    $potentialCandidates = $this->flattenTokens($potentialCandidates);
+    $potentialCandidates = $this->sumRating($potentialCandidates);
     $ner_matcher = new NamedEntityMatcher($potentialCandidates, $this->ner_vocab_ids);
     $ner_matcher->match();
     $this->tag_array = $ner_matcher->get_matches();
@@ -105,6 +102,40 @@ class TaggedText {
     }
 
     $this->markupText();
+  }
+
+  private function flattenTokens($tokens) {
+    $flattened_tokens = array();
+    foreach ($tokens as $token_split) {
+      $token_split[0]->text = implode(' ', $token_split);
+      $flattened_tokens[] = $token_split[0];
+    }
+    return $flattened_tokens;
+  }
+
+  private function sumRating($tokens) {
+    $n = count($tokens)-1;
+    $ratedTokens = array();
+
+    for($i = 0; $i < $n; $i++) {
+      if(isset($tokens[$i])) {
+        $tokens[$i]->rating = (1 + $tokens[$i]->htmlRating) * $tokens[$i]->posRating;
+        for($j = $i+1; $j <= $n; $j++) {
+          if($tokens[$i]->text == $tokens[$j]->text) {
+            $tokens[$i]->rating += (1 + $tokens[$j]->htmlRating) * $tokens[$j]->posRating;
+            $tokens[$i]->freqRating++;
+            unset($tokens[$j]);
+          }
+        }
+        $rated_tokens[] = $tokens[$i];
+      }
+    }
+
+    foreach($rated_tokens as $token) {
+      $token->rating /= 1 + (($token->freqRating-1) * (1-$this->taggerInstance->getConfiguration('frequency_rating')));
+    }
+
+    return $rated_tokens;
   }
 
   public function getProcessedResponse() {

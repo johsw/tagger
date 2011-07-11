@@ -6,11 +6,12 @@ class Token {
 
   static $initwords;
 
-  private $text;
+  public $text;
 
-  public $freqRating;
-  public $posRating;
-  public $htmlRating;
+  public $rating = 1;
+  public $freqRating = 1;
+  public $posRating = 1;
+  public $htmlRating = 1;
 
   public function __construct($text) {
     $this->text = trim($text);

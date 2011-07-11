@@ -19,3 +19,25 @@
   // The hostnames of the sites that you would like to be allowed to call the
   // webservice. Leave an empty array if you want to allow access for all.
   $tagger_conf['service_allow_referer'] = array('tagger.dk');
+
+
+  // Settings for ratings of Named Entities
+  // These should be numbers between 0 and 1
+  // 0: turned off
+  // 0.5: half weight
+  // 1: Turned on (full weight)
+  $tagger_conf['positional_rating'] = 1;
+  $tagger_conf['frequency_rating'] = 1;
+  $tagger_conf['HTML_rating'] = 1;
+
+  // HTML rating
+  $tagger_conf['HTML_tags'] = array(
+    'h1' => 10,
+    'h2' => 7,
+    'strong' => 5,
+    // text that is not within any of the HTML-tags above has a rating of 1
+    // i.e. plain text is rated with 1
+  );
+
+
+

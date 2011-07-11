@@ -31,14 +31,14 @@ class EntityPreprocessor {
       // If the token is uppercase, maybe it is a name or a place.
       if ($token->isUpperCase() && !$token->isStopWord() && !$token->isInitWord()) {
 
-        $entity = array($token->getText());
+        $entity = array($token);
         // Look two words ahead.
         if (isset($this->tokens[$i +2])) {
         $next = $this->tokens[$i +2];
           while (($next->isUpperCase() || $next->isPrefixOrInfix())) {
             // Jump two words.
             $i += 2;
-            $entity[] = $next->getText();
+            $entity[] = $next;
             if (isset($this->tokens[$i+2])) {
               $next = $this->tokens[$i+2];
             }
