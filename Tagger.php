@@ -1,5 +1,7 @@
 <?php
-require_once 'classes/TaggedText.class.php';
+define('__ROOT__', dirname(__FILE__) . '/');
+
+require_once __ROOT__ . 'classes/TaggedText.class.php';
 
 class Tagger {
 
@@ -8,6 +10,7 @@ class Tagger {
   private $conf_settings;
 
   private $configuration;
+
 
   private function __construct($configuration = array())  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
@@ -18,6 +21,7 @@ class Tagger {
       include 'conf.php';
     }
     $this->configuration = $tagger_conf;
+
   }
 
   public static function getTagger($configuration = array()) {
@@ -43,9 +47,9 @@ class Tagger {
 
 
   public function tagText($text, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
-    $controller = new TaggedText($text);
-    $controller->process();
-    return $controller->getProcessedResponse();
+    $tagged_text = new TaggedText($text);
+    $tagged_text->process();
+    return $tagged_text;
   }
 }
 

@@ -1,22 +1,22 @@
 <?php
-
-require_once 'classes/EntityPreprocessor.class.php';
-require_once 'classes/HTMLPreprocessor.class.php';
-require_once 'classes/Unmatched.class.php';
+require_once __ROOT__ . 'classes/EntityPreprocessor.class.php';
+require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
+require_once __ROOT__ . 'classes/Unmatched.class.php';
 
 class TaggedText {
 
   private $text;
   private $rating;
   private $ner_vocab_ids;
-  private $tag_array;
-  private $markedup_text;
-  private $use_markup = FALSE;
+  private $tags;
+  private $markedupText;
+  private $markedupHTML;
+  private $findTagsInText = FALSE;
   private $nl2br = FALSE;
   private $return_uris = FALSE;
   private $return_unmatched = FALSE;
   private $disambiguate = FALSE;
-  private $taggerInstance;
+  private $tagger;
 
   /**
    * Constructs a TaggedText object.
@@ -39,7 +39,7 @@ class TaggedText {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
 
-    $this->taggerInstance = Tagger::getTagger();
+    $this->tagger = Tagger::getTagger();
 
     // Change encoding if necessary.
     $this->text = $text;
@@ -51,7 +51,7 @@ class TaggedText {
       $this->ner_vocab_ids = $ner_vocab_ids;
     }
     else {
-      $vocab_ids = $this->taggerInstance->getConfiguration('ner_vocab_ids');
+      $vocab_ids = $this->tagger->getConfiguration('ner_vocab_ids');
       if (!isset($vocab_ids) || empty($vocab_ids)) {
         throw new ErrorException('Missing vocab definition in configuration.');
       }
@@ -60,14 +60,15 @@ class TaggedText {
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
     $this->return_unmatched = $return_unmatched;
-    $this->use_markup = $use_markup;
+    $this->findTagsInText = $use_markup;
     $this->nl2br = $nl2br;
   }
 
   public function process() {
+    TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
     // Make HTML rating
-    if($this->taggerInstance->getConfiguration('HTML_rating')) {
+    if($this->tagger->getConfiguration('HTML_rating')) {
       $HTMLPreprocessor = new HTMLPreprocessor($this->text);
       $HTMLPreprocessor->parse();
       $tokens = $HTMLPreprocessor->tokens;
@@ -76,14 +77,15 @@ class TaggedText {
       $tokenizer = new Tokenizer(strip_tags($this->text));
       $tokens = $tokenizer->tokens;
     }
+    TaggerLogManager::logVerbose("tokens:" . print_r($tokens, true) . "\n");
 
     $entityPreprocessor = new EntityPreprocessor($tokens);
-    $potentialCandidates = $entityPreprocessor->get_potential_named_entities();
-    $potentialCandidates = $this->flattenTokens($potentialCandidates);
-    $potentialCandidates = $this->sumRating($potentialCandidates);
-    $ner_matcher = new NamedEntityMatcher($potentialCandidates, $this->ner_vocab_ids);
+    $potential_candidates = $entityPreprocessor->get_potential_named_entities();
+    $potential_candidates = $this->flattenTokens($potential_candidates);
+    $potential_candidates = $this->sumRating($potential_candidates);
+    $ner_matcher = new NamedEntityMatcher($potential_candidates, $this->ner_vocab_ids);
     $ner_matcher->match();
-    $this->tag_array = $ner_matcher->get_matches();
+    $this->tags = $ner_matcher->get_matches();
     if (FALSE != $this->return_unmatched) {
       $unmatched_words = $ner_matcher->get_nonmatches();
       $unmatched = new Unmatched($unmatched_words);
@@ -94,14 +96,16 @@ class TaggedText {
     }
     if ($this->disambiguate) {
       require_once 'classes/Disambiguator.class.php';
-      $disambiguator = new Disambiguator($this->tag_array);
-      $this->tag_array = $disambiguator->disambiguate();
+      $disambiguator = new Disambiguator($this->tags);
+      $this->tags = $disambiguator->disambiguate();
     }
     if ($this->return_uris) {
       $this->buildUriData();
     }
 
-    $this->markupText();
+    if($this->findTagsInText) {
+      $this->markupText();
+    }
   }
 
   private function flattenTokens($tokens) {
@@ -117,7 +121,7 @@ class TaggedText {
     $n = count($tokens)-1;
     $ratedTokens = array();
 
-    for($i = 0; $i < $n; $i++) {
+    for($i = 0; $i <= $n; $i++) {
       if(isset($tokens[$i])) {
         $tokens[$i]->rating = (1 + $tokens[$i]->htmlRating) * $tokens[$i]->posRating;
         for($j = $i+1; $j <= $n; $j++) {
@@ -132,50 +136,44 @@ class TaggedText {
     }
 
     foreach($rated_tokens as $token) {
-      $token->rating /= 1 + (($token->freqRating-1) * (1-$this->taggerInstance->getConfiguration('frequency_rating')));
+      $token->rating /= 1 + (($token->freqRating-1) * (1-$this->tagger->getConfiguration('frequency_rating')));
     }
 
     return $rated_tokens;
   }
 
-  public function getProcessedResponse() {
-    $return_arr =  array();
-    if ($this->use_markup) {
-      $return_arr['markup'] = $this->markedup_text;
-    }
+  public function getTags() {
+    return $this->tags;
+  }
 
-    $return_arr['tags'] = $this->tag_array;
-    return $return_arr;
+  public function getTextWithTags() {
+    return $this->markedupText;
   }
 
   private function markupText() {
-    if (!$this->use_markup) {
-      return;
-    }
-    $this->markedup_text = $this->text;
-    foreach ($this->tag_array as $terms) {
+    $this->markedupText = $this->text;
+    foreach ($this->tags as $terms) {
       foreach ($terms as $tid => $term) {
-        $this->markedup_text = str_replace($term['word'], '<span class="tagr-item" id="tid-' . $tid . '" property="dc:subject">' . $term['word'] . '</span> ', $this->markedup_text);
+        $this->markedupText = str_replace($term['word'], '<span class="tagr-item" id="tid-' . $tid . '" property="dc:subject">' . $term['word'] . '</span> ', $this->markedupText);
       }
     }
     if ($this->nl2br) {
-      $this->markedup_text = nl2br($this->markedup_text);
+      $this->markedupText = nl2br($this->markedupText);
     }
   }
   private function buildUriData() {
-    foreach($this->tag_array as $cat => $tags) {
+    foreach($this->tags as $cat => $tags) {
       foreach($tags as $tid => $tag) {
         $uris = $this->fetchUris($tid);
-        $this->tag_array[$cat][$tid]['uris'] = $uris;
+        $this->tags[$cat][$tid]['uris'] = $uris;
       }
     }
   }
   private function fetchUris($tid) {
-    $tagger_instance = Tagger::getTagger();
     $sql = sprintf("SELECT dstid, uri FROM linked_data_sources WHERE tid = %s ORDER BY dstid ASC", $tid);
     $result = TaggerQueryManager::query($sql);
     $uris = array();
-    $lod_sources = $tagger_instance->getConfiguration('lod_sources');
+    $lod_sources = $this->tagger->getConfiguration('lod_sources');
     while ($row = mysqli_fetch_assoc($result)) {
       $uris[$lod_sources[$row['dstid']]] = $row['uri'];
     }

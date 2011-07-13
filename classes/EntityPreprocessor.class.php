@@ -1,7 +1,7 @@
 <?php
 
-require_once 'classes/Token.class.php';
-require_once 'classes/NamedEntityMatcher.class.php';
+require_once __ROOT__ . 'classes/Token.class.php';
+require_once __ROOT__ . 'classes/NamedEntityMatcher.class.php';
 
 class EntityPreprocessor {
   private $tokens;
@@ -30,12 +30,14 @@ class EntityPreprocessor {
 
       // If the token is uppercase, maybe it is a name or a place.
       if ($token->isUpperCase() && !$token->isStopWord() && !$token->isInitWord()) {
+        TaggerLogManager::logVerbose("token:" . $token . "\n");
 
         $entity = array($token);
         // Look two words ahead.
         if (isset($this->tokens[$i +2])) {
-        $next = $this->tokens[$i +2];
+          $next = $this->tokens[$i +2];
           while (($next->isUpperCase() || $next->isPrefixOrInfix())) {
+            TaggerLogManager::logVerbose("next:" . $next . "\n");
             // Jump two words.
             $i += 2;
             $entity[] = $next;

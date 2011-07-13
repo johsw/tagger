@@ -1,6 +1,6 @@
 <?php
 
-require_once 'classes/Tokenizer.class.php';
+require_once __ROOT__ . 'classes/Tokenizer.class.php';
 
 class HTMLPreprocessor {
   private $text;
@@ -25,12 +25,8 @@ class HTMLPreprocessor {
     $tagger_instance = Tagger::getTagger();
     $tag_ratings = $tagger_instance->getConfiguration('HTML_tags');
 
-    echo "Tag: " . $element->nodeName . "\n";
-
     if($element->nodeName == '#text') {
-      //echo "Child: " . $child . "\n";
       $tokenizer = new Tokenizer($element->textContent);
-      //echo "Tokens: ";
       foreach($tokenizer->tokens as $token) {
         $token->htmlRating = $cur_rating;
         $this->tokens[] = $token;

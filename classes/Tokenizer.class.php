@@ -1,7 +1,7 @@
 <?php
 
-require_once 'classes/Token.class.php';
-require_once 'classes/NamedEntityMatcher.class.php';
+require_once __ROOT__ . 'classes/Token.class.php';
+require_once __ROOT__ . 'classes/NamedEntityMatcher.class.php';
 
 class Tokenizer {
   public $words;

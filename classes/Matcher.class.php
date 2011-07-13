@@ -1,5 +1,7 @@
 <?php
-  include 'db/TaggerQueryManager.class.php';
+
+include __ROOT__ . 'logger/TaggerLogManager.class.php';
+include __ROOT__ . 'db/TaggerQueryManager.class.php';
 
 abstract class Matcher {
   protected $matches;
@@ -7,19 +9,21 @@ abstract class Matcher {
   protected $tokens;
   protected $vocabularies;
   protected $nonmatches;
+  protected $tagger;
 
-  function __construct($potential_entities, $vocab_array) {
+  function __construct($potential_entities, $vocab_id_array) {
+    $this->tagger = Tagger::getTagger();
+
     foreach($potential_entities as $token) {
       $this->tokens[$token->text] = $token;
     }
     $this->matches = array();
     $this->nonmatches = array();
-    $this->vocabularies = implode(', ', $vocab_array);
+    $this->vocabularies = implode(', ', $vocab_id_array);
   }
 
   protected function term_query() {
-    $tagger_instance = Tagger::getTagger();
-    $vocab_names = $tagger_instance->getConfiguration('vocab_names');
+    $vocab_names = $this->tagger->getConfiguration('vocab_names');
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
       $imploded_words = implode("','", array_keys($this->tokens));
       $unmatched = $this->tokens;
@@ -39,6 +43,7 @@ abstract class Matcher {
       }
       $this->nonmatches = $unmatched;
     }
+    TaggerLogManager::logVerbose("Matches:\n" . print_r($this->matches, true));
   }
 
   public function get_matches() {

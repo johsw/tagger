@@ -1,6 +1,6 @@
 <?php
 
-require_once 'classes/Matcher.class.php';
+require_once __ROOT__ . 'classes/Matcher.class.php';
 
 class NamedEntityMatcher extends Matcher {
 

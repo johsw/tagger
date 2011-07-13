@@ -39,5 +39,10 @@
     // i.e. plain text is rated with 1
   );
 
+  // Settings for logging
+  $tagger_conf['log_handler'] = 'Default';
+  $tagger_conf['logging_type'] = 'file'; // file db
+  $tagger_conf['logging_level'] = 'standard'; // none error warning standard verbose
+
 
 
