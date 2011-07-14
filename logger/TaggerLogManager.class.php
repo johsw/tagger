@@ -7,7 +7,8 @@ class TaggerLogManager {
   const WARNING  = 2;
   const STANDARD = 3;
   const VERBOSE  = 4;
-  private $LOG_TYPE = array('Error', 'Warning', 'Standard', 'Verbose');
+  const DEBUG    = 5;
+  private $LOG_TYPE = array('Error', 'Warning', 'Standard', 'Verbose', 'Debug');
 
   const FILE_LOG = 3;
   const DB_LOG   = 4;
@@ -53,6 +54,10 @@ class TaggerLogManager {
 
   public function logVerbose($msg) {
     self::logMsg($msg, self::VERBOSE);
+  }
+
+  public function logDebug($msg) {
+    self::logMsg($msg, self::DEBUG);
   }
 
 }

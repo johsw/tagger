@@ -2,15 +2,22 @@
 require_once __ROOT__ . 'classes/EntityPreprocessor.class.php';
 require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
 require_once __ROOT__ . 'classes/Unmatched.class.php';
+require_once __ROOT__ . 'classes/Tag.class.php';
 
 class TaggedText {
 
   private $text;
-  private $rating;
   private $ner_vocab_ids;
+
+
+  private $tokenParts;
+  private $token;
   private $tags;
   private $markedupText;
+  private $intermediateHTML;
   private $markedupHTML;
+
+
   private $findTagsInText = FALSE;
   private $nl2br = FALSE;
   private $return_uris = FALSE;
@@ -67,25 +74,36 @@ class TaggedText {
   public function process() {
     TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
-    // Make HTML rating
+    // Tokenize - with/without HTML.
     if($this->tagger->getConfiguration('HTML_rating')) {
-      $HTMLPreprocessor = new HTMLPreprocessor($this->text);
+      $HTMLPreprocessor = new HTMLPreprocessor($this->text, TRUE);
       $HTMLPreprocessor->parse();
-      $tokens = $HTMLPreprocessor->tokens;
+      $this->tokenParts = &$HTMLPreprocessor->tokens;
+      $this->intermediateHTML = &$HTMLPreprocessor->intermediateHTML;
     }
     else {
       $tokenizer = new Tokenizer(strip_tags($this->text));
-      $tokens = $tokenizer->tokens;
+      $this->tokenParts = &$tokenizer->tokens;
     }
-    TaggerLogManager::logVerbose("tokens:" . print_r($tokens, true) . "\n");
 
-    $entityPreprocessor = new EntityPreprocessor($tokens);
-    $potential_candidates = $entityPreprocessor->get_potential_named_entities();
-    $potential_candidates = $this->flattenTokens($potential_candidates);
-    $potential_candidates = $this->sumRating($potential_candidates);
-    $ner_matcher = new NamedEntityMatcher($potential_candidates, $this->ner_vocab_ids);
+
+    // Named entity recognition
+    $entityPreprocessor = new EntityPreprocessor($this->tokenParts);
+    $potential_entities = $entityPreprocessor->get_potential_named_entities();
+
+    $potential_entities = $this->flattenTokens($potential_entities);
+
+    $this->tokens = $this->rateTokens($potential_entities);
+    TaggerLogManager::logDebug("Found potential entities:\n" . print_r($this->tokens, TRUE));
+
+    $this->tags = $this->mergeTokens($this->tokens);
+
+    $ner_matcher = new NamedEntityMatcher($this->tags, $this->ner_vocab_ids);
     $ner_matcher->match();
     $this->tags = $ner_matcher->get_matches();
+
+
+    // Capture unmatched tags
     if (FALSE != $this->return_unmatched) {
       $unmatched_words = $ner_matcher->get_nonmatches();
       $unmatched = new Unmatched($unmatched_words);
@@ -94,6 +112,7 @@ class TaggedText {
         //TODO - Process and return unmatched entities
       }
     }
+    // Disambiguate
     if ($this->disambiguate) {
       require_once 'classes/Disambiguator.class.php';
       $disambiguator = new Disambiguator($this->tags);
@@ -103,43 +122,73 @@ class TaggedText {
       $this->buildUriData();
     }
 
+    TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
+    // mark up found tags in HTML
     if($this->findTagsInText) {
       $this->markupText();
     }
+
+
   }
 
   private function flattenTokens($tokens) {
     $flattened_tokens = array();
     foreach ($tokens as $token_split) {
-      $token_split[0]->text = implode(' ', $token_split);
-      $flattened_tokens[] = $token_split[0];
+      $token = new Token(implode(' ', $token_split));
+      foreach($token_split as $key => $token_part) {
+        if($token_part->htmlRating > $token->htmlRating) {
+          $token->htmlRating = $token_part->htmlRating;
+        }
+        if($token_part->posRating > $token->posRating) {
+          $token->posRating = $token_part->posRating;
+        }
+        $token->tokenParts[] = $key;
+      }
+      $flattened_tokens[] = $token;
     }
     return $flattened_tokens;
   }
 
-  private function sumRating($tokens) {
+  private function rateTokens($tokens) {
+
+    foreach($tokens as $token) {
+        // ATTENTION: this is the rating expression!
+      $token->rating = (1 + $token->htmlRating) * $token->posRating;
+
+      foreach($token->tokenParts as $part_key) {
+        $this->tokenParts[$part_key]->rating = $token->rating;
+      }
+    }
+    return $tokens;
+  }
+
+
+  private function mergeTokens($tokens) {
     $n = count($tokens)-1;
-    $ratedTokens = array();
+    $tags = array();
 
     for($i = 0; $i <= $n; $i++) {
       if(isset($tokens[$i])) {
-        $tokens[$i]->rating = (1 + $tokens[$i]->htmlRating) * $tokens[$i]->posRating;
-        for($j = $i+1; $j <= $n; $j++) {
-          if($tokens[$i]->text == $tokens[$j]->text) {
-            $tokens[$i]->rating += (1 + $tokens[$j]->htmlRating) * $tokens[$j]->posRating;
-            $tokens[$i]->freqRating++;
+        $tag = new Tag($tokens[$i]);
+        $tags[] = &$tag;
+        for($j = $i; $j <= $n; $j++) {
+          if($tag->text == $tokens[$j]->text) {
+            $tag->rating += $tokens[$j]->rating;
+            $tag->freqRating++;
+            $tag->posRating += $tokens[$j]->posRating;
+            $tag->htmlRating += $tokens[$j]->htmlRating;
+            $tag->tokens[] = $j;
             unset($tokens[$j]);
           }
         }
-        $rated_tokens[] = $tokens[$i];
       }
     }
 
-    foreach($rated_tokens as $token) {
-      $token->rating /= 1 + (($token->freqRating-1) * (1-$this->tagger->getConfiguration('frequency_rating')));
+    foreach($tags as $tag) {
+      $tag->rating /= 1 + (($tag->freqRating-1) * (1-$this->tagger->getConfiguration('frequency_rating')));
     }
 
-    return $rated_tokens;
+    return $tags;
   }
 
   public function getTags() {
@@ -151,16 +200,31 @@ class TaggedText {
   }
 
   private function markupText() {
-    $this->markedupText = $this->text;
-    foreach ($this->tags as $terms) {
-      foreach ($terms as $tid => $term) {
-        $this->markedupText = str_replace($term['word'], '<span class="tagr-item" id="tid-' . $tid . '" property="dc:subject">' . $term['word'] . '</span> ', $this->markedupText);
+
+    foreach($this->tags as $tags) {
+      foreach ($tags as $tag) {
+        foreach ($tag->tokens as $token_key) {
+          $token = $this->tokens[$token_key];
+          TaggerLogManager::logDebug("Token:" . print_r($token, TRUE) . "\n");
+          reset($token->tokenParts);
+          $start_token_part = &$this->tokenParts[current($token->tokenParts)];
+          $end_token_part = &$this->tokenParts[end($token->tokenParts)];
+
+          $start_token_part->text = '<bold>' . $start_token_part->text;
+          $end_token_part->text .= '</bold>';
+        }
       }
     }
-    if ($this->nl2br) {
-      $this->markedupText = nl2br($this->markedupText);
+
+    foreach($this->intermediateHTML as $element) {
+      $this->markedupHTML .= $element;
     }
+
+    return $this->markedupHTML;
   }
+
+
+
   private function buildUriData() {
     foreach($this->tags as $cat => $tags) {
       foreach($tags as $tid => $tag) {

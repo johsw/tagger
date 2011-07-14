@@ -6,8 +6,8 @@ class NamedEntityMatcher extends Matcher {
 
   private $possible_genitives;
 
-  function __construct($text, $ner_vocabs) {
-    parent::__construct($text, $ner_vocabs);
+  function __construct($tags, $ner_vocabs) {
+    parent::__construct($tags, $ner_vocabs);
     //echo "\n NER-MATCHER \n";
     //print_r($text);
   }
@@ -29,7 +29,7 @@ class NamedEntityMatcher extends Matcher {
         }
         $key = FALSE;
       }
-     
+ 
     }
 
 

@@ -6,7 +6,8 @@ class TaggerLogHandler {
   const WARNING  = 2;
   const STANDARD = 3;
   const VERBOSE  = 4;
-  private static $LOG_TYPE = array('None', 'Error', 'Warning', 'Standard', 'Verbose');
+  const DEBUG    = 5;
+  private static $LOG_TYPE = array('None', 'Error', 'Warning', 'Standard', 'Verbose', 'Debug');
 
   const FILE_LOG     = 3;
   const DB_LOG       = 4;
@@ -35,6 +36,9 @@ class TaggerLogHandler {
       }
       elseif($conf == 'verbose') {
         self::$loggingLevel = self::VERBOSE;
+      }
+      elseif($conf == 'debug') {
+        self::$loggingLevel = self::DEBUG;
       }
       else {
         self::$loggingLevel = self::STANDARD;
@@ -104,7 +108,7 @@ EOH;
     foreach($backtrace as $entry) {
       //if ($entry['function'] == __FUNCTION__) {
       //print_r($entry);
-      $log_functions = array('logVerbose', 'logStandard', 'logWarning', 'logError');
+      $log_functions = array('logDebug', 'logVerbose', 'logStandard', 'logWarning', 'logError');
       if ($entry['class'] == 'TaggerLogManager' && in_array($entry['function'], $log_functions)) {
           $file_line = basename($entry['file']) . ', line ' . $entry['line'];
       }
@@ -116,6 +120,7 @@ EOH;
     $log_msg = <<<EOH
 >>> $file_line:
 $msg
+
 EOH;
     fwrite($file, $log_msg);
     fclose($file);

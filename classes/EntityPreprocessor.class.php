@@ -30,17 +30,16 @@ class EntityPreprocessor {
 
       // If the token is uppercase, maybe it is a name or a place.
       if ($token->isUpperCase() && !$token->isStopWord() && !$token->isInitWord()) {
-        TaggerLogManager::logVerbose("token:" . $token . "\n");
 
-        $entity = array($token);
+        $entity = array($i => $token);
         // Look two words ahead.
         if (isset($this->tokens[$i +2])) {
           $next = $this->tokens[$i +2];
           while (($next->isUpperCase() || $next->isPrefixOrInfix())) {
-            TaggerLogManager::logVerbose("next:" . $next . "\n");
+
             // Jump two words.
             $i += 2;
-            $entity[] = $next;
+            $entity[$i] = $next;
             if (isset($this->tokens[$i+2])) {
               $next = $this->tokens[$i+2];
             }

@@ -34,9 +34,11 @@
   $tagger_conf['HTML_tags'] = array(
     'h1' => 10,
     'h2' => 7,
-    'strong' => 5,
-    // text that is not within any of the HTML-tags above has a rating of 1
-    // i.e. plain text is rated with 1
+    'h3' => 5,
+    'strong' => 3,
+    //'#text' => 0,
+    // text that is not within any of the HTML-tags above has a rating of 0
+    // i.e. plain text is rated with 0
   );
 
   // Settings for logging
