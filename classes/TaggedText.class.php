@@ -97,6 +97,7 @@ class TaggedText {
     TaggerLogManager::logDebug("Found potential entities:\n" . print_r($this->tokens, TRUE));
 
     $this->tags = $this->mergeTokens($this->tokens);
+    TaggerLogManager::logDebug("Merged:\n" . print_r($this->tags, TRUE));
 
     $ner_matcher = new NamedEntityMatcher($this->tags, $this->ner_vocab_ids);
     $ner_matcher->match();
@@ -151,11 +152,11 @@ class TaggedText {
 
   private function rateTokens($tokens) {
 
-    foreach($tokens as $token) {
+    foreach ($tokens as $token) {
         // ATTENTION: this is the rating expression!
       $token->rating = (1 + $token->htmlRating) * $token->posRating;
 
-      foreach($token->tokenParts as $part_key) {
+      foreach ($token->tokenParts as $part_key) {
         $this->tokenParts[$part_key]->rating = $token->rating;
       }
     }
@@ -164,15 +165,13 @@ class TaggedText {
 
 
   private function mergeTokens($tokens) {
-    $n = count($tokens)-1;
     $tags = array();
 
-    for($i = 0; $i <= $n; $i++) {
-      if(isset($tokens[$i])) {
+    for ($i = 0, $n = count($tokens)-1; $i <= $n; $i++) {
+      if (isset($tokens[$i])) {
         $tag = new Tag($tokens[$i]);
-        $tags[] = &$tag;
-        for($j = $i; $j <= $n; $j++) {
-          if($tag->text == $tokens[$j]->text) {
+        for ($j = $i; $j <= $n; $j++) {
+          if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
             $tag->rating += $tokens[$j]->rating;
             $tag->freqRating++;
             $tag->posRating += $tokens[$j]->posRating;
@@ -181,10 +180,11 @@ class TaggedText {
             unset($tokens[$j]);
           }
         }
+        $tags[] = $tag;
       }
     }
 
-    foreach($tags as $tag) {
+    foreach ($tags as $tag) {
       $tag->rating /= 1 + (($tag->freqRating-1) * (1-$this->tagger->getConfiguration('frequency_rating')));
     }
 
@@ -205,7 +205,6 @@ class TaggedText {
       foreach ($tags as $tag) {
         foreach ($tag->tokens as $token_key) {
           $token = $this->tokens[$token_key];
-          TaggerLogManager::logDebug("Token:" . print_r($token, TRUE) . "\n");
           reset($token->tokenParts);
           $start_token_part = &$this->tokenParts[current($token->tokenParts)];
           $end_token_part = &$this->tokenParts[end($token->tokenParts)];

@@ -12,7 +12,6 @@ class Token {
   public $text;
 
   public $rating = 0;
-  public $freqRating = 0;
   public $posRating = 1;
   public $htmlRating = 0;
 

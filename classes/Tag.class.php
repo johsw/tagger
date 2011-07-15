@@ -8,6 +8,8 @@ class Tag extends Token {
 
   public $tokens;
 
+  public $realName;
+
   public $freqRating = 0;
 
   public function __construct($token) {

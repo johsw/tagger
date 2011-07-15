@@ -15,7 +15,7 @@ abstract class Matcher {
     $this->tagger = Tagger::getTagger();
 
     foreach($potential_entities as $token) {
-      $this->tokens[$token->text] = $token;
+      $this->tokens[strtolower($token->text)] = $token;
     }
     $this->matches = array();
     $this->nonmatches = array();
@@ -26,20 +26,37 @@ abstract class Matcher {
     $vocab_names = $this->tagger->getConfiguration('vocab_names');
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
       $imploded_words = implode("','", array_keys($this->tokens));
-      $unmatched = $this->tokens;
-      $result = TaggerQueryManager::query("SELECT COUNT(tid) AS count, tid, name, vid FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN(SELECT tid FROM term_synonym WHERE name IN('$imploded_words'))) GROUP BY BINARY name");
+      $unmatched = array();
+      foreach($this->tokens as $token) {
+        $unmatched[strtolower($token->text)] = $token;
+      }
+
+      // First we find synonyms
+      $synonyms = array();
+      $query = "SELECT tid, name FROM term_synonym WHERE name IN('$imploded_words') GROUP BY name";
+      $result = TaggerQueryManager::query($query);
+      while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        $synonyms[$row['tid']] = $row['name'];
+        TaggerLogManager::logVerbose("Synonym:\n" . print_r($row, TRUE));
+      }
+      $synonym_ids_imploded = implode("','", array_keys($synonyms));
+
+      // Then we find the actual names of entities
+      $query = "SELECT COUNT(tid) AS count, tid, name, vid FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY BINARY name";
+      TaggerLogManager::logDebug("Match-query:\n" . $query);
+      $result = TaggerQueryManager::query($query);
       while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         $matchword = '';
-        if (array_key_exists($row['name'], $unmatched)) {
+        if (array_key_exists(strtolower($row['name']), $unmatched)) {
           unset($unmatched[$row['name']]);
           $matchword = $row['name'];
         }
-        if (isset($row['synonym']) && array_key_exists($row['synonym'], $unmatched)) {
-          unset($unmatched[$row['synonym']]);
-          $matchword = $row['synonym'];
+        elseif(array_key_exists(strtolower($row['tid']), $synonyms)) {
+          unset($unmatched[$synonyms[$row['tid']]]);
+          $matchword = $synonyms[$row['tid']];
+          $this->tokens[strtolower($matchword)]->realName = $row['name'];
         }
-        //$this->matches[$row['vid']][$row['tid']] = array('word' => $row['name'], 'match' => $matchword, 'hits' => $row['count']);
-        $this->matches[$row['vid']][$row['tid']] = $this->tokens[$row['name']];
+        $this->matches[$row['vid']][$row['tid']] = $this->tokens[strtolower($matchword)];
       }
       $this->nonmatches = $unmatched;
     }
