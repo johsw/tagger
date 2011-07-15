@@ -78,17 +78,17 @@ class TaggedText {
     if($this->tagger->getConfiguration('HTML_rating')) {
       $HTMLPreprocessor = new HTMLPreprocessor($this->text, TRUE);
       $HTMLPreprocessor->parse();
-      $this->tokenParts = &$HTMLPreprocessor->tokens;
+      $this->partialTokens = &$HTMLPreprocessor->tokens;
       $this->intermediateHTML = &$HTMLPreprocessor->intermediateHTML;
     }
     else {
       $tokenizer = new Tokenizer(strip_tags($this->text));
-      $this->tokenParts = &$tokenizer->tokens;
+      $this->partialTokens = &$tokenizer->tokens;
     }
 
 
     // Named entity recognition
-    $entityPreprocessor = new EntityPreprocessor($this->tokenParts);
+    $entityPreprocessor = new EntityPreprocessor(&$this->partialTokens);
     $potential_entities = $entityPreprocessor->get_potential_named_entities();
 
     $potential_entities = $this->flattenTokens($potential_entities);
@@ -136,14 +136,14 @@ class TaggedText {
     $flattened_tokens = array();
     foreach ($tokens as $token_split) {
       $token = new Token(implode(' ', $token_split));
-      foreach($token_split as $key => $token_part) {
+      foreach ($token_split as $key => $token_part) {
         if($token_part->htmlRating > $token->htmlRating) {
           $token->htmlRating = $token_part->htmlRating;
         }
         if($token_part->posRating > $token->posRating) {
           $token->posRating = $token_part->posRating;
         }
-        $token->tokenParts[] = $key;
+        $token->tokenParts = $token_split;
       }
       $flattened_tokens[] = $token;
     }
@@ -156,8 +156,8 @@ class TaggedText {
         // ATTENTION: this is the rating expression!
       $token->rating = (1 + $token->htmlRating) * $token->posRating;
 
-      foreach ($token->tokenParts as $part_key) {
-        $this->tokenParts[$part_key]->rating = $token->rating;
+      foreach ($token->tokenParts as $partial_token) {
+        $partial_token->rating = $token->rating;
       }
     }
     return $tokens;
@@ -176,7 +176,7 @@ class TaggedText {
             $tag->freqRating++;
             $tag->posRating += $tokens[$j]->posRating;
             $tag->htmlRating += $tokens[$j]->htmlRating;
-            $tag->tokens[] = $j;
+            $tag->tokens[] = &$tokens[$j];
             unset($tokens[$j]);
           }
         }
@@ -201,16 +201,18 @@ class TaggedText {
 
   private function markupText() {
 
-    foreach($this->tags as $tags) {
-      foreach ($tags as $tag) {
-        foreach ($tag->tokens as $token_key) {
-          $token = $this->tokens[$token_key];
-          reset($token->tokenParts);
-          $start_token_part = &$this->tokenParts[current($token->tokenParts)];
-          $end_token_part = &$this->tokenParts[end($token->tokenParts)];
+    foreach($this->tags as $category_tags) {
+      foreach ($category_tags as $tag) {
+        foreach ($tag->tokens as $synonym_tokens) {
+          foreach ($synonym_tokens as $token) {
+            //$token = $this->tokens[$token_key];
+            reset($token->tokenParts);
+            $start_token_part = &current($token->tokenParts);
+            $end_token_part = &end($token->tokenParts);
 
-          $start_token_part->text = '<bold>' . $start_token_part->text;
-          $end_token_part->text .= '</bold>';
+            $start_token_part->text = '<bold>' . $start_token_part->text;
+            $end_token_part->text .= '</bold>';
+          }
         }
       }
     }

@@ -9,14 +9,16 @@ class Tag extends Token {
   public $tokens;
 
   public $realName;
+  public $synonyms = array();
 
+  public $posRating = 0;
   public $freqRating = 0;
 
   public function __construct($token) {
-    if(is_string($token)) {
+    if (is_string($token)) {
       parent::__construct($token);
     }
-    elseif(is_a($token, 'Token')) {
+    elseif (is_a($token, 'Token')) {
       $this->text = $token->text;
       /*
       $this->rating = $token->rating;
@@ -25,6 +27,19 @@ class Tag extends Token {
       $this->htmlRating = $token->htmlRating;
        */
     }
+  }
+
+  public static function mergeTags($tags) {
+    $ret_tag = new Tag('');
+    foreach ($tags as $tag) {
+      $ret_tag->synonyms[]  = $tag->text;
+      $ret_tag->rating     += $tag->rating;
+      $ret_tag->freqRating += $tag->freqRating;
+      $ret_tag->posRating  += $tag->posRating;
+      $ret_tag->htmlRating += $tag->htmlRating;
+      $ret_tag->tokens[]    = $tag->tokens;
+    }
+    return $ret_tag;
   }
 
 

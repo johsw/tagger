@@ -30,16 +30,17 @@ class EntityPreprocessor {
 
       // If the token is uppercase, maybe it is a name or a place.
       if ($token->isUpperCase() && !$token->isStopWord() && !$token->isInitWord()) {
+        $entity = array($i => &$this->tokens[$i]);
 
-        $entity = array($i => $token);
         // Look two words ahead.
         if (isset($this->tokens[$i +2])) {
           $next = $this->tokens[$i +2];
+
           while (($next->isUpperCase() || $next->isPrefixOrInfix())) {
 
             // Jump two words.
             $i += 2;
-            $entity[$i] = $next;
+            $entity[$i] = &$this->tokens[$i];
             if (isset($this->tokens[$i+2])) {
               $next = $this->tokens[$i+2];
             }
@@ -49,6 +50,8 @@ class EntityPreprocessor {
           }
         }
         $this->named_entities[] = $entity;
+        unset($next);
+        unset($token);
       }
     }
   }

@@ -15,7 +15,7 @@ class Token {
   public $posRating = 1;
   public $htmlRating = 0;
 
-  public $tokenParts;
+  public $tokenParts = FALSE;
 
   public function __construct($text) {
     $this->text = $text;
