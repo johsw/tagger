@@ -1,7 +1,6 @@
 <?php
 
 require_once __ROOT__ . 'classes/Token.class.php';
-require_once __ROOT__ . 'classes/NamedEntityMatcher.class.php';
 
 class EntityPreprocessor {
   private $tokens;

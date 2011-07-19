@@ -1,5 +1,8 @@
 <?php
-require_once __ROOT__ . 'classes/EntityPreprocessor.class.php';
+
+require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
+
+require_once __ROOT__ . 'classes/NamedEntityMatcher.class.php';
 require_once __ROOT__ . 'classes/Unmatched.class.php';
 require_once __ROOT__ . 'classes/Tag.class.php';
 
@@ -43,7 +46,7 @@ class TaggedText {
    * @param array $ner_vocab_ids
    *   The database-IDs of the vocabularies to be used.
    */
-  public function __construct($text, $ner_vocab_ids, $rate_html, $rating, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
+  public function __construct($text, $ner_vocab_ids = array(), $rate_html = FALSE, $find_tags_in_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $nl2br = FALSE) {
 
     if (empty($text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
@@ -55,13 +58,38 @@ class TaggedText {
       $this->text = utf8_encode($this->text);
     }
 
+    // If no vocabulary database-ids are given - load them from config
+    if (empty($ner_vocab_ids)) {
+      $ner_vocab_names = $this->getConfiguration('ner_vocab_names');
+      $ner_vocab_ids = array_keys($ner_vocab_names);
+      if (!isset($ner_vocab_ids) || empty($ner_vocab_ids)) {
+        throw new ErrorException('Missing vocab definition in configuration.');
+      }
+    }
+
+    // If no rating array is given - load it from configuration
+    if (empty($rating)) {
+      $rating['frequency'] = $this->getConfiguration('frequency_rating');
+      $rating['positional'] = $this->getConfiguration('positional_rating');
+      $rating['HTML'] = $this->getConfiguration('HTML_rating');
+
+      $rating['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
+      $rating['positional_critical_token_count'] = $this->getConfiguration('positional_critical_token_count_rating');
+
+
+      if ($key = array_search(FALSE, $rating, TRUE)) {
+        throw new ErrorException('Missing ' . $key . '_rating definition in configuration.');
+      }
+    }
+
+
     $this->ner_vocab_ids = $ner_vocab_ids;
     $this->rating = $rating;
     $this->rateHTML = $rate_html;
+    $this->findTagsInText = $find_tags_in_text;
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
     $this->return_unmatched = $return_unmatched;
-    $this->findTagsInText = $use_markup;
     $this->nl2br = $nl2br;
   }
 
@@ -82,23 +110,12 @@ class TaggedText {
     $this->paragraphCount = $preprocessor->paragraphCount;
     $this->tokenCount = $preprocessor->tokenCount;
     $this->intermediateHTML = $preprocessor->intermediateHTML;
+
+    $this->partialTokens = $this->rateTokens($this->partialTokens);
     TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
-
     // Named entity recognition
-    // TODO: All this should go into the NamedEntityMatcher
-    $entityPreprocessor = new EntityPreprocessor(&$this->partialTokens);
-    $potential_entities = $entityPreprocessor->get_potential_named_entities();
-
-    $potential_entities = $this->flattenTokens($potential_entities);
-
-    $this->tokens = $this->rateTokens($potential_entities);
-    TaggerLogManager::logDebug("Found potential entities:\n" . print_r($this->tokens, TRUE));
-
-    $this->tags = $this->mergeTokens($this->tokens);
-    TaggerLogManager::logDebug("Merged:\n" . print_r($this->tags, TRUE));
-
-    $ner_matcher = new NamedEntityMatcher($this->tags, $this->ner_vocab_ids);
+    $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->ner_vocab_ids);
     $ner_matcher->match();
     $this->tags = $ner_matcher->get_matches();
 
@@ -122,36 +139,16 @@ class TaggedText {
       $this->buildUriData();
     }
 
-    TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
     // mark up found tags in HTML
     if ($this->findTagsInText) {
       $this->markupText();
+      TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
     }
 
-
-  }
-
-  private function flattenTokens($tokens) {
-    $flattened_tokens = array();
-    foreach ($tokens as $token_split) {
-      $token = new Token(implode(' ', $token_split));
-      reset($token_split);
-      $first = current($token_split);
-      $token->tokenNumber = $first->tokenNumber;
-      $token->paragraphNumber = $first->paragraphNumber;
-      foreach ($token_split as $key => $token_part) {
-        if ($token_part->htmlRating > $token->htmlRating) {
-          $token->htmlRating = $token_part->htmlRating;
-        }
-        $token->tokenParts = $token_split;
-      }
-      $flattened_tokens[] = $token;
-    }
-    return $flattened_tokens;
   }
 
   private function rateTokens($tokens) {
-    $min_pos_rating = (1 - $this->rating['positional_minimum']) * exp(-$this->tokenCount/350) + $this->rating['positional_minimum'];
+    $min_pos_rating = (1 - $this->rating['positional_minimum']) * exp(-$this->tokenCount/$this->rating['positional_critical_token_count']) + $this->rating['positional_minimum'];
     $a = log(1 - (1 - $min_pos_rating) * $this->rating['positional']);
 
     foreach ($tokens as $token) {
@@ -165,39 +162,13 @@ class TaggedText {
       // ATTENTION: this is the rating expression!
       $token->rating = (1 + $token->htmlRating * $this->rating['HTML']) * $token->posRating;
 
-      foreach ($token->tokenParts as $partial_token) {
-        $partial_token->rating = $token->rating;
+      if($token->tokenParts != NULL) {
+        foreach ($token->tokenParts as $partial_token) {
+          $partial_token->rating = $token->rating;
+        }
       }
     }
     return $tokens;
-  }
-
-
-  private function mergeTokens($tokens) {
-    $tags = array();
-
-    for ($i = 0, $n = count($tokens)-1; $i <= $n; $i++) {
-      if (isset($tokens[$i])) {
-        $tag = new Tag($tokens[$i]);
-        for ($j = $i; $j <= $n; $j++) {
-          if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
-            $tag->rating += $tokens[$j]->rating;
-            $tag->freqRating++;
-            $tag->posRating += $tokens[$j]->posRating;
-            $tag->htmlRating += $tokens[$j]->htmlRating;
-            $tag->tokens[] = &$tokens[$j];
-            unset($tokens[$j]);
-          }
-        }
-        $tags[] = $tag;
-      }
-    }
-
-    foreach ($tags as $tag) {
-      $tag->rating /= 1 + (($tag->freqRating-1) * (1-$this->rating['frequency']));
-    }
-
-    return $tags;
   }
 
   public function getTags() {
@@ -214,7 +185,6 @@ class TaggedText {
       foreach ($category_tags as $tag) {
         foreach ($tag->tokens as $synonym_tokens) {
           foreach ($synonym_tokens as $token) {
-            //$token = $this->tokens[$token_key];
             reset($token->tokenParts);
             $start_token_part = &current($token->tokenParts);
             $end_token_part = &end($token->tokenParts);

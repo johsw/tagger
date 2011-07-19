@@ -38,8 +38,8 @@ class PlainTextPreprocessor {
 
     foreach ($this->tokens as $token) {
       // a newline followed by a word (at some point) denotes a new paragraph
-      // i.e. two newlines in a row with whitespace in between is two new
-      // paragraphs
+      // i.e. two newlines in a row with whitespace in between only gives one
+      // new paragraph (assuming they're followed by an actual word)
       if ($token->text == '__newline__') {
         $lookingForWord = TRUE;
       }

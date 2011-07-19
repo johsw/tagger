@@ -1,7 +1,7 @@
 <?php
 
-include __ROOT__ . 'logger/TaggerLogManager.class.php';
-include __ROOT__ . 'db/TaggerQueryManager.class.php';
+require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
+require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
 
 abstract class Matcher {
   protected $matches;
@@ -11,10 +11,10 @@ abstract class Matcher {
   protected $nonmatches;
   protected $tagger;
 
-  function __construct($potential_entities, $vocab_id_array) {
+  function __construct($tokens, $vocab_id_array) {
     $this->tagger = Tagger::getTagger();
 
-    foreach($potential_entities as $token) {
+    foreach($tokens as $token) {
       $this->tokens[strtolower($token->text)] = $token;
     }
     $this->matches = array();
