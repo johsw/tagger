@@ -37,6 +37,10 @@
   // not be rated as low as the minimum rating
   $tagger_conf['positional_critical_token_count_rating'] = 350;
 
+  $tagger_conf['mark_tags_start'] = '<strong>';
+  $tagger_conf['mark_tags_end'] = '</strong>';
+
+
   // HTML rating
   $tagger_conf['HTML_tags'] = array(
     'h1' => 10,

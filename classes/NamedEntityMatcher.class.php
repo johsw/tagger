@@ -1,8 +1,8 @@
 <?php
+require_once __ROOT__ . 'classes/Matcher.class.php';
 
 require_once __ROOT__ . 'classes/Token.class.php';
 require_once __ROOT__ . 'classes/Tag.class.php';
-require_once __ROOT__ . 'classes/Matcher.class.php';
 require_once __ROOT__ . 'classes/EntityPreprocessor.class.php';
 
 class NamedEntityMatcher extends Matcher {
@@ -10,6 +10,8 @@ class NamedEntityMatcher extends Matcher {
   private $partialTokens;
 
   function __construct($partial_tokens, $ner_vocabs) {
+    $this->tagger = Tagger::getTagger();
+
     $this->partialTokens = $partial_tokens;
     TaggerLogManager::logDebug("Partial tokens:\n" . print_r($this->partialTokens, TRUE));
 
@@ -20,7 +22,7 @@ class NamedEntityMatcher extends Matcher {
     TaggerLogManager::logDebug("Found potential entities:\n" . print_r($potential_entities, TRUE));
 
     $potential_entities = $this->mergeTokens($potential_entities);
-    TaggerLogManager::logDebug("Merged:\n" . print_r($this->tokens, TRUE));
+    TaggerLogManager::logDebug("Merged:\n" . print_r($potential_entities, TRUE));
 
     parent::__construct($potential_entities, $ner_vocabs);
   }
@@ -72,7 +74,8 @@ class NamedEntityMatcher extends Matcher {
     }
 
     foreach ($tags as $tag) {
-      $tag->rating /= 1 + (($tag->freqRating-1) * (1-$this->rating['frequency']));
+      $freq_rating = $this->tagger->getConfiguration('frequency_rating');
+      $tag->rating /= 1 + (($tag->freqRating - 1) * (1 - $freq_rating));
     }
 
     return $tags;

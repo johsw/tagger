@@ -20,7 +20,6 @@ class TaggedText {
 
   private $markedupText;
   private $intermediateHTML;
-  private $markedupHTML;
 
 
   private $rateHTML = TRUE;
@@ -52,6 +51,7 @@ class TaggedText {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
 
+
     // Change encoding if necessary.
     $this->text = $text;
     if (mb_detect_encoding($this->text) != 'UTF-8') {
@@ -60,7 +60,8 @@ class TaggedText {
 
     // If no vocabulary database-ids are given - load them from config
     if (empty($ner_vocab_ids)) {
-      $ner_vocab_names = $this->getConfiguration('ner_vocab_names');
+      $this->tagger = Tagger::getTagger();
+      $ner_vocab_names = $this->tagger->getConfiguration('ner_vocab_names');
       $ner_vocab_ids = array_keys($ner_vocab_names);
       if (!isset($ner_vocab_ids) || empty($ner_vocab_ids)) {
         throw new ErrorException('Missing vocab definition in configuration.');
@@ -69,18 +70,24 @@ class TaggedText {
 
     // If no rating array is given - load it from configuration
     if (empty($rating)) {
-      $rating['frequency'] = $this->getConfiguration('frequency_rating');
-      $rating['positional'] = $this->getConfiguration('positional_rating');
-      $rating['HTML'] = $this->getConfiguration('HTML_rating');
+      $this->tagger = Tagger::getTagger();
+      $rating['frequency'] = $this->tagger->getConfiguration('frequency_rating');
+      $rating['positional'] = $this->tagger->getConfiguration('positional_rating');
+      $rating['HTML'] = $this->tagger->getConfiguration('HTML_rating');
 
-      $rating['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
-      $rating['positional_critical_token_count'] = $this->getConfiguration('positional_critical_token_count_rating');
+      $rating['positional_minimum'] = $this->tagger->getConfiguration('positional_minimum_rating');
+      $rating['positional_critical_token_count'] = $this->tagger->getConfiguration('positional_critical_token_count_rating');
 
 
       if ($key = array_search(FALSE, $rating, TRUE)) {
         throw new ErrorException('Missing ' . $key . '_rating definition in configuration.');
       }
     }
+
+    $this->tagger = Tagger::getTagger();
+    $this->markTagsStart = $this->tagger->getConfiguration('mark_tags_start');
+    $this->markTagsEnd = $this->tagger->getConfiguration('mark_tags_end');
+
 
 
     $this->ner_vocab_ids = $ner_vocab_ids;
@@ -180,27 +187,32 @@ class TaggedText {
   }
 
   private function markupText() {
+    $this->markedupText = '';
 
     foreach ($this->tags as $category_tags) {
       foreach ($category_tags as $tag) {
         foreach ($tag->tokens as $synonym_tokens) {
           foreach ($synonym_tokens as $token) {
-            reset($token->tokenParts);
-            $start_token_part = &current($token->tokenParts);
-            $end_token_part = &end($token->tokenParts);
+            if(!$token->hasBeenMarked) {
+              reset($token->tokenParts);
+              $start_token_part = &current($token->tokenParts);
+              $end_token_part = &end($token->tokenParts);
 
-            $start_token_part->text = '<bold>' . $start_token_part->text;
-            $end_token_part->text .= '</bold>';
+              $start_token_part->text = $this->markTagsStart . $start_token_part->text;
+              $end_token_part->text .= $this->markTagsEnd;
+
+              $token->hasBeenMarked = TRUE;
+            }
           }
         }
       }
     }
 
     foreach ($this->intermediateHTML as $element) {
-      $this->markedupHTML .= $element;
+      $this->markedupText .= $element;
     }
 
-    return $this->markedupHTML;
+    return $this->markedupText;
   }
 
 

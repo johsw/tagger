@@ -18,6 +18,7 @@ class Token {
   public $tokenNumber = NULL;
   public $paragraphNumber = NULL;
 
+  public $hasBeenMarked = FALSE;
   public $tokenParts = FALSE;
 
   public function __construct($text) {
