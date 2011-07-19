@@ -1,6 +1,5 @@
 <?php
 require_once __ROOT__ . 'classes/EntityPreprocessor.class.php';
-require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
 require_once __ROOT__ . 'classes/Unmatched.class.php';
 require_once __ROOT__ . 'classes/Tag.class.php';
 
@@ -13,11 +12,15 @@ class TaggedText {
   private $tokenParts;
   private $token;
   private $tags;
+  private $tokenCount;
+  private $paragraphCount;
+
   private $markedupText;
   private $intermediateHTML;
   private $markedupHTML;
 
 
+  private $rateHTML = TRUE;
   private $findTagsInText = FALSE;
   private $nl2br = FALSE;
   private $return_uris = FALSE;
@@ -40,13 +43,11 @@ class TaggedText {
    * @param array $ner_vocab_ids
    *   The database-IDs of the vocabularies to be used.
    */
-  public function __construct($text, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
+  public function __construct($text, $ner_vocab_ids, $rate_html, $rating, $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
 
     if (empty($text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
-
-    $this->tagger = Tagger::getTagger();
 
     // Change encoding if necessary.
     $this->text = $text;
@@ -54,16 +55,9 @@ class TaggedText {
       $this->text = utf8_encode($this->text);
     }
 
-    if (!empty($ner_vocab_ids)) {
-      $this->ner_vocab_ids = $ner_vocab_ids;
-    }
-    else {
-      $vocab_ids = $this->tagger->getConfiguration('ner_vocab_ids');
-      if (!isset($vocab_ids) || empty($vocab_ids)) {
-        throw new ErrorException('Missing vocab definition in configuration.');
-      }
-      $this->ner_vocab_ids = $vocab_ids;
-    }
+    $this->ner_vocab_ids = $ner_vocab_ids;
+    $this->rating = $rating;
+    $this->rateHTML = $rate_html;
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
     $this->return_unmatched = $return_unmatched;
@@ -75,19 +69,24 @@ class TaggedText {
     TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
     // Tokenize - with/without HTML.
-    if($this->tagger->getConfiguration('HTML_rating')) {
-      $HTMLPreprocessor = new HTMLPreprocessor($this->text, TRUE);
-      $HTMLPreprocessor->parse();
-      $this->partialTokens = &$HTMLPreprocessor->tokens;
-      $this->intermediateHTML = &$HTMLPreprocessor->intermediateHTML;
+    if ($this->rateHTML) {
+      require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
+      $preprocessor = new HTMLPreprocessor($this->text, TRUE);
     }
     else {
-      $tokenizer = new Tokenizer(strip_tags($this->text));
-      $this->partialTokens = &$tokenizer->tokens;
+      require_once __ROOT__ . 'classes/PlainTextPreprocessor.class.php';
+      $preprocessor = new PlainTextPreprocessor($this->text, TRUE);
     }
+    $preprocessor->parse();
+    $this->partialTokens = &$preprocessor->tokens;
+    $this->paragraphCount = $preprocessor->paragraphCount;
+    $this->tokenCount = $preprocessor->tokenCount;
+    $this->intermediateHTML = $preprocessor->intermediateHTML;
+    TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
 
     // Named entity recognition
+    // TODO: All this should go into the NamedEntityMatcher
     $entityPreprocessor = new EntityPreprocessor(&$this->partialTokens);
     $potential_entities = $entityPreprocessor->get_potential_named_entities();
 
@@ -125,7 +124,7 @@ class TaggedText {
 
     TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
     // mark up found tags in HTML
-    if($this->findTagsInText) {
+    if ($this->findTagsInText) {
       $this->markupText();
     }
 
@@ -136,12 +135,13 @@ class TaggedText {
     $flattened_tokens = array();
     foreach ($tokens as $token_split) {
       $token = new Token(implode(' ', $token_split));
+      reset($token_split);
+      $first = current($token_split);
+      $token->tokenNumber = $first->tokenNumber;
+      $token->paragraphNumber = $first->paragraphNumber;
       foreach ($token_split as $key => $token_part) {
-        if($token_part->htmlRating > $token->htmlRating) {
+        if ($token_part->htmlRating > $token->htmlRating) {
           $token->htmlRating = $token_part->htmlRating;
-        }
-        if($token_part->posRating > $token->posRating) {
-          $token->posRating = $token_part->posRating;
         }
         $token->tokenParts = $token_split;
       }
@@ -151,10 +151,19 @@ class TaggedText {
   }
 
   private function rateTokens($tokens) {
+    $min_pos_rating = (1 - $this->rating['positional_minimum']) * exp(-$this->tokenCount/350) + $this->rating['positional_minimum'];
+    $a = log(1 - (1 - $min_pos_rating) * $this->rating['positional']);
 
     foreach ($tokens as $token) {
-        // ATTENTION: this is the rating expression!
-      $token->rating = (1 + $token->htmlRating) * $token->posRating;
+      if ($this->paragraphCount >= 3) {
+        $token->posRating = exp($a * (($token->paragraphNumber - 1) / ($this->paragraphCount - 1)));
+      }
+      else {
+        $token->posRating = exp($a * (($token->tokenNumber - 1) / ($this->tokenCount - 1)));
+      }
+
+      // ATTENTION: this is the rating expression!
+      $token->rating = (1 + $token->htmlRating * $this->rating['HTML']) * $token->posRating;
 
       foreach ($token->tokenParts as $partial_token) {
         $partial_token->rating = $token->rating;
@@ -185,7 +194,7 @@ class TaggedText {
     }
 
     foreach ($tags as $tag) {
-      $tag->rating /= 1 + (($tag->freqRating-1) * (1-$this->tagger->getConfiguration('frequency_rating')));
+      $tag->rating /= 1 + (($tag->freqRating-1) * (1-$this->rating['frequency']));
     }
 
     return $tags;
@@ -201,7 +210,7 @@ class TaggedText {
 
   private function markupText() {
 
-    foreach($this->tags as $category_tags) {
+    foreach ($this->tags as $category_tags) {
       foreach ($category_tags as $tag) {
         foreach ($tag->tokens as $synonym_tokens) {
           foreach ($synonym_tokens as $token) {
@@ -217,7 +226,7 @@ class TaggedText {
       }
     }
 
-    foreach($this->intermediateHTML as $element) {
+    foreach ($this->intermediateHTML as $element) {
       $this->markedupHTML .= $element;
     }
 
@@ -227,8 +236,8 @@ class TaggedText {
 
 
   private function buildUriData() {
-    foreach($this->tags as $cat => $tags) {
-      foreach($tags as $tid => $tag) {
+    foreach ($this->tags as $cat => $tags) {
+      foreach ($tags as $tid => $tag) {
         $uris = $this->fetchUris($tid);
         $this->tags[$cat][$tid]['uris'] = $uris;
       }

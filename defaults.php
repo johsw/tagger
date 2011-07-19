@@ -26,9 +26,13 @@
   // 0: turned off
   // 0.5: half weight
   // 1: Turned on (full weight)
-  $tagger_conf['positional_rating'] = 1;
   $tagger_conf['frequency_rating'] = 1;
   $tagger_conf['HTML_rating'] = 1;
+  $tagger_conf['positional_rating'] = 1;
+
+  // the last word or paragraph in the text will have a rating that is 0.3
+  // times lower than the first word or paragraph
+  $tagger_conf['positional_minimum_rating'] = 0.3;
 
   // HTML rating
   $tagger_conf['HTML_tags'] = array(
@@ -39,6 +43,15 @@
     //'#text' => 0,
     // text that is not within any of the HTML-tags above has a rating of 0
     // i.e. plain text is rated with 0
+  );
+
+  // HTML paragraph separators
+  // i.e. which tags define a paragraph
+  $tagger_conf['HTML_paragraph_separators'] = array(
+    'p',
+    'h1',
+    'h2',
+    'h3',
   );
 
   // Settings for logging

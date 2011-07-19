@@ -15,6 +15,9 @@ class Token {
   public $posRating = 1;
   public $htmlRating = 0;
 
+  public $tokenNumber = NULL;
+  public $paragraphNumber = NULL;
+
   public $tokenParts = FALSE;
 
   public function __construct($text) {

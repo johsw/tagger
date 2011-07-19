@@ -33,10 +33,15 @@ class Tagger {
   }
 
   public function getConfiguration($setting = NULL) {
-    if (isset($this->configuration[$setting])) {
+    if ($setting === NULL) {
+      return $this->configuration;
+    }
+    else if (isset($this->configuration[$setting])) {
       return $this->configuration[$setting];
     }
-    return $this->configuration;
+    else {
+      return FALSE;
+    }
   }
 
   // Prevent users to clone the instance
@@ -46,8 +51,30 @@ class Tagger {
 
 
 
-  public function tagText($text, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
-    $tagged_text = new TaggedText($text);
+  public function tagText($text, $rate_html = TRUE, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
+    if (empty($ner_vocab_ids)) {
+      $ner_vocab_ids = $this->getConfiguration('ner_vocab_ids');
+      if (!isset($ner_vocab_ids) || empty($ner_vocab_ids)) {
+        throw new ErrorException('Missing vocab definition in configuration.');
+      }
+    }
+
+    if (empty($rating)) {
+      $rating['frequency'] = $this->getConfiguration('frequency_rating');
+      $rating['positional'] = $this->getConfiguration('positional_rating');
+      $rating['HTML'] = $this->getConfiguration('HTML_rating');
+
+      $rating['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
+
+
+      if ($key = array_search(FALSE, $rating, TRUE)) {
+        throw new ErrorException('Missing ' . $key . '_rating definition in configuration.');
+      }
+    }
+
+
+
+    $tagged_text = new TaggedText($text, $ner_vocab_ids, $rate_html, $rating);
     $tagged_text->process();
     return $tagged_text;
   }

@@ -23,7 +23,7 @@ abstract class Matcher {
   }
 
   protected function term_query() {
-    $vocab_names = $this->tagger->getConfiguration('vocab_names');
+
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
       $imploded_words = implode("','", array_keys($this->tokens));
       $unmatched = $this->tokens;
@@ -66,9 +66,15 @@ abstract class Matcher {
         }
       }
       $this->nonmatches = $unmatched;
+      TaggerLogManager::logVerbose("Matches:\n" . print_r($this->matches, TRUE));
+      TaggerLogManager::logVerbose("Unmatched:\n" . print_r($this->nonmatches, TRUE));
     }
-    TaggerLogManager::logVerbose("Matches:\n" . print_r($this->matches, TRUE));
-    TaggerLogManager::logVerbose("Unmatched:\n" . print_r($this->nonmatches, TRUE));
+    else if(empty($this->vocabularies)) {
+      throw new ErrorException('No vocabularies given.');
+    }
+    else if(empty($this->tokens)) {
+      throw new ErrorException('No tokens given.');
+    }
   }
 
   public function get_matches() {

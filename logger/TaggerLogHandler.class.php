@@ -1,14 +1,7 @@
 <?php
+require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 
 class TaggerLogHandler {
-  const NONE     = 0;
-  const ERROR    = 1;
-  const WARNING  = 2;
-  const STANDARD = 3;
-  const VERBOSE  = 4;
-  const DEBUG    = 5;
-  private static $LOG_TYPE = array('None', 'Error', 'Warning', 'Standard', 'Verbose', 'Debug');
-
   const FILE_LOG     = 3;
   const DB_LOG       = 4;
   const TERMINAL_LOG = 5;
@@ -23,33 +16,21 @@ class TaggerLogHandler {
 
     self::$tagger = Tagger::getTagger();
 
-    if($logging_level == NULL) {
+    if ($logging_level == NULL) {
       $conf = strtolower(self::$tagger->getConfiguration('logging_level'));
-      if($conf == 'none') {
-        self::$loggingLevel = self::NONE;
-      }
-      elseif($conf == 'error') {
-        self::$loggingLevel = self::ERROR;
-      }
-      elseif($conf == 'warning') {
-        self::$loggingLevel = self::WARNING;
-      }
-      elseif($conf == 'verbose') {
-        self::$loggingLevel = self::VERBOSE;
-      }
-      elseif($conf == 'debug') {
-        self::$loggingLevel = self::DEBUG;
+      if ($key = array_search($conf, array_map('strtolower', TaggerLogManager::$LOG_TYPE))) {
+        self::$loggingLevel = $key;
       }
       else {
-        self::$loggingLevel = self::STANDARD;
+        self::$loggingLevel = TaggerLogManager::STANDARD;
       }
     }
-    if($logging_type == NULL) {
+    if ($logging_type == NULL) {
       $conf = strtolower(self::$tagger->getConfiguration('logging_type'));
-      if($conf == 'db') {
+      if ($conf == 'db') {
         self::$loggingType = self::DB_LOG;
       }
-      elseif($conf == 'terminal') {
+      elseif ($conf == 'terminal') {
         self::$loggingType = self::TERMINAL_LOG;
       }
       else {
@@ -67,32 +48,32 @@ class TaggerLogHandler {
   }
 
 
-  public function logMsg($msg, $level = self::STANDARD) {
+  public function logMsg($msg, $level = TaggerLogManager::STANDARD) {
     if (!isset(self::$instance)) {
       $c = __CLASS__;
       self::$instance = new $c;
     }
 
 
-    if($level <= self::$loggingLevel) {
-      if(self::$loggingType == self::FILE_LOG) {
+    if ($level <= self::$loggingLevel) {
+      if (self::$loggingType == self::FILE_LOG) {
         self::logFile($msg, $level);
       }
-      elseif(self::$loggingType == self::DB_LOG) {
+      elseif (self::$loggingType == self::DB_LOG) {
         // should be logDB() when implemented
         self::logFile($msg, $level);
       }
-      elseif(self::$loggingType == self::TERMINAL_LOG) {
+      elseif (self::$loggingType == self::TERMINAL_LOG) {
         self::logTerminal($msg, $level);
       }
     }
   }
 
-  private function logFile($msg, $level = self::STANDARD) {
+  private function logFile($msg, $level = TaggerLogManager::STANDARD) {
     date_default_timezone_set('Europe/Copenhagen');
     $filename = __ROOT__ . 'logs/' . date('Y-m-d') . '.log';
     $time = date('H:i:s');
-    $log_type = self::$LOG_TYPE[$level];
+    $log_type = TaggerLogManager::$LOG_TYPE[$level];
     $file = fopen($filename, 'a');
     $log_msg = <<<EOH
 ------------------------------------ $time ------------------------------------
@@ -103,9 +84,9 @@ EOH;
     fclose($file);
   }
 
-  private function logTerminal($msg, $level = self::STANDARD) {
+  private function logTerminal($msg, $level = TaggerLogManager::STANDARD) {
     $backtrace = debug_backtrace();
-    foreach($backtrace as $entry) {
+    foreach ($backtrace as $entry) {
       //if ($entry['function'] == __FUNCTION__) {
       //print_r($entry);
       $log_functions = array('logDebug', 'logVerbose', 'logStandard', 'logWarning', 'logError');
@@ -116,7 +97,7 @@ EOH;
 
 
     $file = fopen('php://stdout', 'a');
-    $log_type = self::$LOG_TYPE[$level];
+    $log_type = TaggerLogManager::$LOG_TYPE[$level];
     $log_msg = <<<EOH
 >>> $file_line:
 $msg

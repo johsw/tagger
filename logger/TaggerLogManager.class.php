@@ -8,11 +8,14 @@ class TaggerLogManager {
   const STANDARD = 3;
   const VERBOSE  = 4;
   const DEBUG    = 5;
-  private $LOG_TYPE = array('Error', 'Warning', 'Standard', 'Verbose', 'Debug');
-
-  const FILE_LOG = 3;
-  const DB_LOG   = 4;
-  const TERMINAL_LOG = 5;
+  public static $LOG_TYPE = array(
+    self::NONE     => 'None',
+    self::ERROR    => 'Error',
+    self::WARNING  => 'Warning',
+    self::STANDARD => 'Standard',
+    self::VERBOSE  => 'Verbose',
+    self::DEBUG    => 'Debug',
+  );
 
 
   private static $instance;
