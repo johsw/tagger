@@ -33,6 +33,7 @@
   // the last word or paragraph in the text will have a rating that is 0.3
   // times lower than the first word or paragraph
   $tagger_conf['positional_minimum_rating'] = 0.3;
+  $tagger_conf['positional_critical_token_count_rating'] = 350;
 
   // HTML rating
   $tagger_conf['HTML_tags'] = array(

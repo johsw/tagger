@@ -53,7 +53,8 @@ class Tagger {
 
   public function tagText($text, $rate_html = TRUE, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $use_markup = FALSE, $nl2br = FALSE) {
     if (empty($ner_vocab_ids)) {
-      $ner_vocab_ids = $this->getConfiguration('ner_vocab_ids');
+      $ner_vocab_names = $this->getConfiguration('ner_vocab_names');
+      $ner_vocab_ids = array_keys($ner_vocab_names);
       if (!isset($ner_vocab_ids) || empty($ner_vocab_ids)) {
         throw new ErrorException('Missing vocab definition in configuration.');
       }
@@ -65,6 +66,7 @@ class Tagger {
       $rating['HTML'] = $this->getConfiguration('HTML_rating');
 
       $rating['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
+      $rating['positional_critical_token_count'] = $this->getConfiguration('positional_critical_token_count_rating');
 
 
       if ($key = array_search(FALSE, $rating, TRUE)) {
