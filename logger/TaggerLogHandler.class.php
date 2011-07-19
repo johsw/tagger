@@ -2,9 +2,9 @@
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 
 class TaggerLogHandler {
-  const FILE_LOG     = 3;
-  const DB_LOG       = 4;
-  const TERMINAL_LOG = 5;
+  const FILE_LOG     = 1;
+  const DB_LOG       = 2;
+  const TERMINAL_LOG = 3;
 
   public static $loggingLevel;
   public static $loggingType;

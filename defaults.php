@@ -33,6 +33,8 @@
   // the last word or paragraph in the text will have a rating that is 0.3
   // times lower than the first word or paragraph
   $tagger_conf['positional_minimum_rating'] = 0.3;
+  // if the text is shorter than the critical token count, the last word will
+  // not be rated as low as the minimum rating
   $tagger_conf['positional_critical_token_count_rating'] = 350;
 
   // HTML rating

@@ -24,7 +24,7 @@ class TaggedText {
 
 
   private $rateHTML = TRUE;
-  private $findTagsInText = FALSE;
+  private $returnMarkedText = FALSE;
   private $nl2br = FALSE;
   private $return_uris = FALSE;
   private $return_unmatched = FALSE;
@@ -46,7 +46,7 @@ class TaggedText {
    * @param array $ner_vocab_ids
    *   The database-IDs of the vocabularies to be used.
    */
-  public function __construct($text, $ner_vocab_ids = array(), $rate_html = FALSE, $find_tags_in_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $nl2br = FALSE) {
+  public function __construct($text, $ner_vocab_ids = array(), $rate_html = FALSE, $return_marked_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $nl2br = FALSE) {
 
     if (empty($text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
@@ -86,7 +86,7 @@ class TaggedText {
     $this->ner_vocab_ids = $ner_vocab_ids;
     $this->rating = $rating;
     $this->rateHTML = $rate_html;
-    $this->findTagsInText = $find_tags_in_text;
+    $this->returnMarkedText = $return_marked_text;
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
     $this->return_unmatched = $return_unmatched;
@@ -99,7 +99,7 @@ class TaggedText {
     // Tokenize - with/without HTML.
     if ($this->rateHTML) {
       require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
-      $preprocessor = new HTMLPreprocessor($this->text, TRUE);
+      $preprocessor = new HTMLPreprocessor($this->text, $this->returnMarkedText);
     }
     else {
       require_once __ROOT__ . 'classes/PlainTextPreprocessor.class.php';
@@ -140,7 +140,7 @@ class TaggedText {
     }
 
     // mark up found tags in HTML
-    if ($this->findTagsInText) {
+    if ($this->returnMarkedText) {
       $this->markupText();
       TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
     }
