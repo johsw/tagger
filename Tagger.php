@@ -51,7 +51,7 @@ class Tagger {
 
 
 
-  public function tagText($text, $rate_html = TRUE, $return_marked_text = FALSE, $rating = array(), $ner_vocab_ids = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $nl2br = FALSE) {
+  public function tagText($text, $ner_vocab_ids = array(), $rate_html = TRUE, $return_marked_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $nl2br = FALSE) {
     if (empty($ner_vocab_ids)) {
       $ner_vocab_names = $this->getConfiguration('ner_vocab_names');
       $ner_vocab_ids = array_keys($ner_vocab_names);
