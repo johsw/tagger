@@ -76,7 +76,7 @@ class Tagger {
 
 
 
-    $tagged_text = new TaggedText($text, $ner_vocab_ids, $rate_html, $return_marked_text, $rating);
+    $tagged_text = new TaggedText($text, $ner_vocab_ids, $rate_html, $return_marked_text, $rating, $disambiguate, $return_uris, $return_unmatched, $nl2br);
     $tagged_text->process();
     return $tagged_text;
   }
