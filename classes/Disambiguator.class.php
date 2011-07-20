@@ -20,6 +20,7 @@ class Disambiguator {
     }
     foreach ($this->tags as $vocabulary => $tids) {
       foreach($tids as $tid => $tag) {
+        print_r($tag); exit;
         if ($tag['hits'] > 1) {
           $checked_tid = $this->checkRelatedTags($tag);
           if ($checked_tid != 0 && $checked_tid != $tid) {
