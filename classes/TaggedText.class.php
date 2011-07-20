@@ -60,6 +60,7 @@ class TaggedText {
 
     // If no vocabulary database-ids are given - load them from config
     if (empty($ner_vocab_ids)) {
+      require_once __ROOT__ . 'Tagger.php';
       $this->tagger = Tagger::getTagger();
       $ner_vocab_names = $this->tagger->getConfiguration('ner_vocab_names');
       $ner_vocab_ids = array_keys($ner_vocab_names);
@@ -70,6 +71,7 @@ class TaggedText {
 
     // If no rating array is given - load it from configuration
     if (empty($rating)) {
+      require_once __ROOT__ . 'Tagger.php';
       $this->tagger = Tagger::getTagger();
       $rating['frequency'] = $this->tagger->getConfiguration('frequency_rating');
       $rating['positional'] = $this->tagger->getConfiguration('positional_rating');

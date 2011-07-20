@@ -51,8 +51,7 @@ abstract class Matcher {
           $row_name_lowered = strtolower($row['name']);
           if (array_key_exists($row_name_lowered, $unmatched)) {
             unset($unmatched[$row_name_lowered]);
-            $matchword = $row_name_lowered;
-            $row_matches[] = $this->tokens[strtolower($matchword)];
+            $row_matches[] = $this->tokens[$row_name_lowered];
           }
           if (array_key_exists($row['tid'], $synonyms)) {
             foreach ($synonyms[$row['tid']] as $synonym) {
@@ -61,12 +60,16 @@ abstract class Matcher {
             }
           }
           $match = Tag::mergeTags($row_matches);
-          $match->realName = $row['name'];
           $match->ambiguous = ($row['count'] > 1);
           if ($match->ambiguous) {
             $match->meanings = $row['tids'];
           }
-          $this->matches[$row['vid']][$row['tid']] = $match;
+          if (isset($this->matches[$row['vid']][$row['tid']])) {
+            $this->matches[$row['vid']][$row['tid']] = Tag::mergeTags(array($match, $this->matches[$row['vid']][$row['tid']]), $row['name']);
+          } else {
+            $match->realName = $row['name'];
+            $this->matches[$row['vid']][$row['tid']] = $match;
+          }
         }
       }
       $this->nonmatches = $unmatched;
@@ -74,10 +77,10 @@ abstract class Matcher {
       TaggerLogManager::logVerbose("Unmatched:\n" . print_r($this->nonmatches, TRUE));
     }
     else if(empty($this->vocabularies)) {
-      throw new ErrorException('No vocabularies given.');
+      throw new ErrorException('No vocabularies given to Matcher.');
     }
     else if(empty($this->tokens)) {
-      throw new ErrorException('No tokens given.');
+      throw new ErrorException('No tokens given to Matcher.');
     }
   }
 

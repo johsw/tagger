@@ -13,7 +13,6 @@ class NamedEntityMatcher extends Matcher {
     $this->tagger = Tagger::getTagger();
 
     $this->partialTokens = $partial_tokens;
-    TaggerLogManager::logDebug("Partial tokens:\n" . print_r($this->partialTokens, TRUE));
 
     $entityPreprocessor = new EntityPreprocessor(&$this->partialTokens);
     $potential_entities = $entityPreprocessor->get_potential_named_entities();
@@ -28,9 +27,24 @@ class NamedEntityMatcher extends Matcher {
   }
 
   public function match() {
-
-
+    // We search for all tags 'straight up'.
     $this->term_query();
+
+    // But maybe some tags were genitives, e.g. 'Rod Stewart's toys'
+    // - a danish genitive ends in 's'.
+    $possible_genitives = array_filter($this->nonmatches, create_function('$token', 'return (substr($token->text, -1) == "s");'));
+    TaggerLogManager::logDebug("Possible genitives:\n" . print_r($possible_genitives, TRUE));
+
+
+    // We do a new search for the possibly unmatched genitives.
+    if (!empty($possible_genitives)) {
+      $this->tokens = array();
+      foreach ($possible_genitives as $ends_with_s) {
+        $this->tokens[strtolower(rtrim($ends_with_s, 's'))] = $ends_with_s;
+      }
+      $this->term_query();
+    }
+
     return;
   }
 
@@ -65,7 +79,7 @@ class NamedEntityMatcher extends Matcher {
             $tag->freqRating++;
             $tag->posRating += $tokens[$j]->posRating;
             $tag->htmlRating += $tokens[$j]->htmlRating;
-            $tag->tokens[] = &$tokens[$j];
+            $tag->tokens[$tag->text][] = &$tokens[$j];
             unset($tokens[$j]);
           }
         }

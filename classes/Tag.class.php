@@ -9,7 +9,7 @@ require_once __ROOT__ . 'classes/Token.class.php';
  */
 class Tag extends Token {
 
-  public $tokens;
+  public $tokens = array();
 
   public $realName;
   public $synonyms = array();
@@ -24,17 +24,21 @@ class Tag extends Token {
     elseif (is_a($token, 'Token')) {
       $this->text = $token->text;
     }
+    if($this->text != '') {
+      $this->synonyms[] = $this->text;
+    }
   }
 
-  public static function mergeTags($tags) {
-    $ret_tag = new Tag('');
+  public static function mergeTags($tags, $real_name = '') {
+    $ret_tag = new Tag($real_name);
+    $ret_tag->realName = $real_name;
     foreach ($tags as $tag) {
-      $ret_tag->synonyms[]  = $tag->text;
+      $ret_tag->synonyms    = array_unique(array_merge($ret_tag->synonyms, $tag->synonyms));
       $ret_tag->rating     += $tag->rating;
       $ret_tag->freqRating += $tag->freqRating;
       $ret_tag->posRating  += $tag->posRating;
       $ret_tag->htmlRating += $tag->htmlRating;
-      $ret_tag->tokens[]    = $tag->tokens;
+      $ret_tag->tokens      = array_merge_recursive($ret_tag->tokens, $tag->tokens);
     }
     return $ret_tag;
   }
