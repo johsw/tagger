@@ -35,6 +35,12 @@ class Tag extends Token {
     foreach ($tags as $tag) {
       $ret_tag->synonyms = array_unique(array_merge($ret_tag->synonyms, $tag->synonyms));
       $ret_tag->tokens   = array_merge_recursive($ret_tag->tokens, $tag->tokens);
+      if(isset($tag->ambiguous)) {
+        $ret_tag->ambiguous = $tag->ambiguous;
+      }
+      if(isset($tag->meanings)) {
+        $ret_tag->meanings = $tag->meanings;
+      }
     }
     return $ret_tag;
   }
