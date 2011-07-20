@@ -221,7 +221,7 @@ class TaggedText {
     foreach ($this->tags as $cat => $tags) {
       foreach ($tags as $tid => $tag) {
         $uris = $this->fetchUris($tid);
-        $this->tags[$cat][$tid]['uris'] = $uris;
+        $this->tags[$cat][$tid]->uris = $uris;
       }
     }
   }
@@ -230,7 +230,7 @@ class TaggedText {
     $result = TaggerQueryManager::query($sql);
     $uris = array();
     $lod_sources = $this->tagger->getConfiguration('lod_sources');
-    while ($row = mysqli_fetch_assoc($result)) {
+    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
       $uris[$lod_sources[$row['dstid']]] = $row['uri'];
     }
     return $uris;
