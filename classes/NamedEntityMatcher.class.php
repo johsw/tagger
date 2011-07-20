@@ -56,9 +56,11 @@ class NamedEntityMatcher extends Matcher {
       $first = current($token_split);
       $token->tokenNumber = $first->tokenNumber;
       $token->paragraphNumber = $first->paragraphNumber;
+      $token->rating = $first->rating;
       foreach ($token_split as $key => $token_part) {
         if ($token_part->htmlRating > $token->htmlRating) {
           $token->htmlRating = $token_part->htmlRating;
+          $token->rating = $token_part->rating;
         }
         $token->tokenParts = $token_split;
       }
@@ -75,21 +77,12 @@ class NamedEntityMatcher extends Matcher {
         $tag = new Tag($tokens[$i]);
         for ($j = $i; $j <= $n; $j++) {
           if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
-            $tag->rating += $tokens[$j]->rating;
-            $tag->freqRating++;
-            $tag->posRating += $tokens[$j]->posRating;
-            $tag->htmlRating += $tokens[$j]->htmlRating;
             $tag->tokens[$tag->text][] = &$tokens[$j];
             unset($tokens[$j]);
           }
         }
         $tags[] = $tag;
       }
-    }
-
-    foreach ($tags as $tag) {
-      $freq_rating = $this->tagger->getConfiguration('frequency_rating');
-      $tag->rating /= 1 + (($tag->freqRating - 1) * (1 - $freq_rating));
     }
 
     return $tags;

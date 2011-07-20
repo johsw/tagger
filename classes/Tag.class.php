@@ -33,16 +33,25 @@ class Tag extends Token {
     $ret_tag = new Tag($real_name);
     $ret_tag->realName = $real_name;
     foreach ($tags as $tag) {
-      $ret_tag->synonyms    = array_unique(array_merge($ret_tag->synonyms, $tag->synonyms));
-      $ret_tag->rating     += $tag->rating;
-      $ret_tag->freqRating += $tag->freqRating;
-      $ret_tag->posRating  += $tag->posRating;
-      $ret_tag->htmlRating += $tag->htmlRating;
-      $ret_tag->tokens      = array_merge_recursive($ret_tag->tokens, $tag->tokens);
+      $ret_tag->synonyms = array_unique(array_merge($ret_tag->synonyms, $tag->synonyms));
+      $ret_tag->tokens   = array_merge_recursive($ret_tag->tokens, $tag->tokens);
     }
     return $ret_tag;
   }
 
+  public function rateTag($rating) {
+    foreach ($this->tokens as $synonym_tokens) {
+      foreach ($synonym_tokens as $token) {
+        $this->freqRating++;
+        $this->rating     += $token->rating;
+        $this->posRating  += $token->posRating;
+        $this->htmlRating += $token->htmlRating;
+      }
+    }
+
+    $freq_rating = $rating['frequency'];
+    $this->rating /= 1 + (($this->freqRating - 1) * (1 - $freq_rating));
+  }
 
 }
 

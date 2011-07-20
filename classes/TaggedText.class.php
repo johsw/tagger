@@ -120,13 +120,23 @@ class TaggedText {
     $this->tokenCount = $preprocessor->tokenCount;
     $this->intermediateHTML = $preprocessor->intermediateHTML;
 
-    $this->partialTokens = $this->rateTokens($this->partialTokens);
+    // Rate the partial tokens.
+    foreach ($this->partialTokens as $token) {
+      $token->rateToken($this->tokenCount, $this->paragraphCount, $this->rating);
+    }
     TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
-    // Named entity recognition
+    // Do named entity recognition: find named entities.
     $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->ner_vocab_ids);
     $ner_matcher->match();
     $this->tags = $ner_matcher->get_matches();
+
+    // Rate the tags (named entities).
+    $rating = $this->rating;
+    $tag_rate_closure = function($tag) use ($rating) {
+      $tag->rateTag($rating);
+    };
+    array_walk_recursive($this->tags, $tag_rate_closure);
 
 
     // Capture unmatched tags
@@ -154,30 +164,6 @@ class TaggedText {
       TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
     }
 
-  }
-
-  private function rateTokens($tokens) {
-    $min_pos_rating = (1 - $this->rating['positional_minimum']) * exp(-$this->tokenCount/$this->rating['positional_critical_token_count']) + $this->rating['positional_minimum'];
-    $a = log(1 - (1 - $min_pos_rating) * $this->rating['positional']);
-
-    foreach ($tokens as $token) {
-      if ($this->paragraphCount >= 3) {
-        $token->posRating = exp($a * (($token->paragraphNumber - 1) / ($this->paragraphCount - 1)));
-      }
-      else {
-        $token->posRating = exp($a * (($token->tokenNumber - 1) / ($this->tokenCount - 1)));
-      }
-
-      // ATTENTION: this is the rating expression!
-      $token->rating = (1 + $token->htmlRating * $this->rating['HTML']) * $token->posRating;
-
-      if($token->tokenParts != NULL) {
-        foreach ($token->tokenParts as $partial_token) {
-          $partial_token->rating = $token->rating;
-        }
-      }
-    }
-    return $tokens;
   }
 
   public function getTags() {
