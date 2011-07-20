@@ -16,12 +16,11 @@ class Disambiguator {
   public function disambiguate() {
 
     if (!isset($this->tags)) {
-      // TODO: Do what?
+      return;
     }
     foreach ($this->tags as $vocabulary => $tids) {
       foreach($tids as $tid => $tag) {
-        print_r($tag); exit;
-        if ($tag['hits'] > 1) {
+        if ($tag->ambiguous) {
           $checked_tid = $this->checkRelatedTags($tag);
           if ($checked_tid != 0 && $checked_tid != $tid) {
             $temp = $this->tags[$vocabulary][$tid];
@@ -35,7 +34,7 @@ class Disambiguator {
   }
 
   public function checkRelatedTags($tag) {
-    $related_tags = $this->getRelatedTags($tag);
+    $related_tags = $this->getRelatedWords($tag);
     $max_matches = 0;
     $current = 0;
     foreach ($related_tags as $tid => $rtids) {
@@ -47,9 +46,9 @@ class Disambiguator {
     }
     return $current;
   }
-  public function getRelatedTags($tag) {
+  public function getRelatedWords($tag) {
     $tagger_instance = Tagger::getTagger();
-    $vocabularies = implode(',', array_keys($tagger_instance->getConfiguration('vocab_names')));
+    $vocabularies = implode(',', array_keys($tagger_instance->getConfiguration('ner_vocab_names')));
     $sql = sprintf("SELECT l.tid, l.name, GROUP_CONCAT(r.rtid SEPARATOR ', ') AS rtids FROM term_synonym AS l LEFT JOIN term_relations AS r ON l.tid = r.tid WHERE l.vid IN (%s) AND l.name = '%s' GROUP BY l.tid", $vocabularies, $tag['word']);
     $matches = array();
     $result = TaggerQueryManager::query($sql);

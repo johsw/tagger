@@ -41,7 +41,7 @@ abstract class Matcher {
       $imploded_words = implode("','", array_keys($unmatched));
 
       // Then we find the actual names of entities
-      $query = "SELECT COUNT(tid) AS count, tid, name, vid FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY BINARY name";
+      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid SEPARATOR '|') AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY BINARY name";
       TaggerLogManager::logDebug("Match-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
 
@@ -62,6 +62,10 @@ abstract class Matcher {
           }
           $match = Tag::mergeTags($row_matches);
           $match->realName = $row['name'];
+          $match->ambiguous = ($row['count'] > 1);
+          if ($match->ambiguous) {
+            $match->meanings = $row['tids'];
+          }
           $this->matches[$row['vid']][$row['tid']] = $match;
         }
       }
