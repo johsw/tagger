@@ -139,7 +139,7 @@ class TaggedText {
     // Disambiguate
     if ($this->disambiguate) {
       require_once 'classes/Disambiguator.class.php';
-      $disambiguator = new Disambiguator($this->tags);
+      $disambiguator = new Disambiguator($this->tags, $this->text);
       $this->tags = $disambiguator->disambiguate();
     }
     if ($this->return_uris) {
