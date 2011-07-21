@@ -44,6 +44,16 @@ class Tagger {
     }
   }
 
+  public function setConfiguration($setting, $value) {
+    if (isset($this->configuration[$setting])) {
+      $this->configuration[$setting] = $value;
+      return $this->configuration[$setting];
+    }
+    else {
+      throw new ErrorException('Setting ' . $setting . ' not found in configuration.');
+    }
+  }
+
   // Prevent users to clone the instance
   public function __clone() {
     trigger_error('Clone is not allowed.', E_USER_ERROR);
