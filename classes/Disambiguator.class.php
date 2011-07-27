@@ -60,7 +60,7 @@ class Disambiguator {
     $matches = array();
     $result = TaggerQueryManager::query($sql);
     if ($result) {
-      while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+      while ($row = TaggerQueryManager::fetch($result)) {
         $matches[$row['tid']] = explode('|', $row['words']);
       }
     }
@@ -71,7 +71,7 @@ class Disambiguator {
     $tagger_instance = Tagger::getTagger();
     $sql = sprintf("SELECT c.vid FROM term_data AS c WHERE c.tid = %s LIMIT 0,1", $tid);
     $result = TaggerQueryManager::query($sql);
-    $row = $result->fetch(PDO::FETCH_ASSOC);
+    $row = TaggerQueryManager::fetch($result);
     $vocab_names = $tagger_instance->getConfiguration('vocab_names');
     return $row['vid'];
   }

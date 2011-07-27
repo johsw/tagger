@@ -32,9 +32,15 @@ abstract class Matcher {
       $synonyms = array();
       $query = "SELECT tid, name FROM term_synonym WHERE name IN('$imploded_words') GROUP BY name";
       $result = TaggerQueryManager::query($query);
+<<<<<<< HEAD
       while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         $synonyms[$row['tid']][] = mb_strtolower($row['name']);
         unset($unmatched[mb_strtolower($row['name'])]);
+=======
+      while ($row = TaggerQueryManager::fetch($result)) {
+        $synonyms[$row['tid']][] = strtolower($row['name']);
+        unset($unmatched[strtolower($row['name'])]);
+>>>>>>> FETCH_HEAD
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
       $synonym_ids_imploded = implode("','", array_keys($synonyms));
@@ -46,7 +52,7 @@ abstract class Matcher {
       TaggerLogManager::logDebug("Match-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
 
-      while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+      while ($row = TaggerQueryManager::fetch($result)) {
         if($row['name'] != '') {
           $row_matches = array();
           $row_name_lowered = mb_strtolower($row['name']);
