@@ -218,7 +218,7 @@ class TaggedText {
     $result = TaggerQueryManager::query($sql);
     $uris = array();
     $lod_sources = $this->tagger->getConfiguration('lod_sources');
-    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    while ($row = TaggerQueryManager::fetch($result)) {
       $uris[$lod_sources[$row['dstid']]] = $row['uri'];
     }
     return $uris;
