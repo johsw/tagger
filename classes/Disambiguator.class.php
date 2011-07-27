@@ -56,12 +56,12 @@ class Disambiguator {
   public function getRelatedWords($tag) {
     $tagger_instance = Tagger::getTagger();
 
-    $sql = sprintf("SELECT r.tid, GROUP_CONCAT(r.name SEPARATOR '|') AS words FROM term_disambiguation AS r WHERE r.tid IN (%s) GROUP BY r.tid", str_replace('|', ',', $tag->meanings));
+    $sql = sprintf("SELECT r.tid, GROUP_CONCAT(r.name) AS words FROM term_disambiguation AS r WHERE r.tid IN (%s) GROUP BY r.tid", $tag->meanings);
     $matches = array();
     $result = TaggerQueryManager::query($sql);
     if ($result) {
       while ($row = TaggerQueryManager::fetch($result)) {
-        $matches[$row['tid']] = explode('|', $row['words']);
+        $matches[$row['tid']] = explode(',', $row['words']);
       }
     }
     return $matches;

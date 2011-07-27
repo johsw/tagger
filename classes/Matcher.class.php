@@ -42,7 +42,7 @@ abstract class Matcher {
       $imploded_words = implode("','", $words);
 
       // Then we find the actual names of entities
-      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid SEPARATOR '|') AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY name";
+      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY name";
       TaggerLogManager::logDebug("Match-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
 
