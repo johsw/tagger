@@ -170,7 +170,7 @@ class TaggedText {
     return $this->tags;
   }
 
-  public function getTextWithTags() {
+  public function getMarkedupText() {
     return $this->markedupText;
   }
 

@@ -15,7 +15,7 @@ abstract class Matcher {
     $this->tagger = Tagger::getTagger();
 
     foreach($tokens as $token) {
-      $this->tokens[strtolower($token->text)] = $token;
+      $this->tokens[mb_strtolower($token->text)] = $token;
     }
     $this->matches = array();
     $this->nonmatches = array();
@@ -32,23 +32,30 @@ abstract class Matcher {
       $synonyms = array();
       $query = "SELECT tid, name FROM term_synonym WHERE name IN('$imploded_words') GROUP BY name";
       $result = TaggerQueryManager::query($query);
+<<<<<<< HEAD
+      while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        $synonyms[$row['tid']][] = mb_strtolower($row['name']);
+        unset($unmatched[mb_strtolower($row['name'])]);
+=======
       while ($row = TaggerQueryManager::fetch($result)) {
         $synonyms[$row['tid']][] = strtolower($row['name']);
         unset($unmatched[strtolower($row['name'])]);
+>>>>>>> FETCH_HEAD
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
       $synonym_ids_imploded = implode("','", array_keys($synonyms));
-      $imploded_words = implode("','", array_keys($unmatched));
+      $words = array_map(function($token) { return $token->text; }, $unmatched);
+      $imploded_words = implode("','", $words);
 
       // Then we find the actual names of entities
-      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid SEPARATOR '|') AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY BINARY name";
+      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid SEPARATOR '|') AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY name";
       TaggerLogManager::logDebug("Match-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
 
       while ($row = TaggerQueryManager::fetch($result)) {
         if($row['name'] != '') {
           $row_matches = array();
-          $row_name_lowered = strtolower($row['name']);
+          $row_name_lowered = mb_strtolower($row['name']);
           if (array_key_exists($row_name_lowered, $unmatched)) {
             unset($unmatched[$row_name_lowered]);
             $row_matches[] = $this->tokens[$row_name_lowered];
