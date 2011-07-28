@@ -23,8 +23,8 @@ class Unmatched {
   private function wordHasBeenLogged($word) {
     $sql = sprintf("SELECT count FROM tagger_unmatched_terms WHERE name = '%s';", $word);
     $result = TaggerQueryManager::query($sql);
-    $row = mysqli_fetch_assoc($result);
-    return (bool)$row;
+    $row = TaggerQueryManager::fetch($result);
+    return (bool)$row['count'];
   }
   private function logNewWord($word) {
     $sql = sprintf("INSERT INTO tagger_unmatched_terms SET name = '%s', count = 1, created = CURRENT_TIMESTAMP", $word);

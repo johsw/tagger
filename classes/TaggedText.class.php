@@ -26,7 +26,7 @@ class TaggedText {
   private $returnMarkedText = FALSE;
   private $nl2br = FALSE;
   private $return_uris = FALSE;
-  private $return_unmatched = FALSE;
+  private $log_unmatched = FALSE;
   private $disambiguate = FALSE;
   private $tagger;
 
@@ -45,7 +45,7 @@ class TaggedText {
    * @param array $ner_vocab_ids
    *   The database-IDs of the vocabularies to be used.
    */
-  public function __construct($text, $ner_vocab_ids = array(), $rate_html = FALSE, $return_marked_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $return_unmatched = FALSE, $nl2br = FALSE) {
+  public function __construct($text, $ner_vocab_ids = array(), $rate_html = FALSE, $return_marked_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $log_unmatched = FALSE, $nl2br = FALSE) {
 
     if (empty($text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
@@ -98,7 +98,7 @@ class TaggedText {
     $this->returnMarkedText = $return_marked_text;
     $this->disambiguate = $disambiguate;
     $this->return_uris = $return_uris;
-    $this->return_unmatched = $return_unmatched;
+    $this->log_unmatched = $log_unmatched;
     $this->nl2br = $nl2br;
   }
 
@@ -140,13 +140,11 @@ class TaggedText {
 
 
     // Capture unmatched tags
-    if (FALSE != $this->return_unmatched) {
-      $unmatched_words = $ner_matcher->get_nonmatches();
-      $unmatched = new Unmatched($unmatched_words);
+    if ($this->log_unmatched) {
+      $unmatched_entities = $ner_matcher->get_nonmatches();
+      $unmatched = new Unmatched($unmatched_entities);
       $unmatched->logUnmatched();
-      if ($this->return_unmatched) {
-        //TODO - Process and return unmatched entities
-      }
+
     }
     // Disambiguate
     if ($this->disambiguate) {

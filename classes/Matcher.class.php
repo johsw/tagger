@@ -38,8 +38,7 @@ abstract class Matcher {
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
       $synonym_ids_imploded = implode("','", array_keys($synonyms));
-      $words = array_map(function($token) { return $token->text; }, $unmatched);
-      $imploded_words = implode("','", $words);
+      $imploded_words = implode("','", array_keys($unmatched));
 
       // Then we find the actual names of entities
       $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY name";
