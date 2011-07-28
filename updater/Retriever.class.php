@@ -30,21 +30,21 @@ class Retriever {
 
   public function set_variable($name, $value) {
     $sql = sprintf("REPLACE INTO variables SET name='%s', value='%s'", $name, $value);
-    return DatabaseBuddy::query($sql);
+    return TaggerQueryManager::query($sql);
   }
 
   public function get_variable($name) {
     $sql = sprintf("SELECT value FROM variables WHERE name='%s'", $name);
-    $result = DatabaseBuddy::query($sql);
+    $result = TaggerQueryManager::query($sql);
     if (!$result) {
       $this->check_database_table('variables');
       return TRUE;
     }
-    $object = mysql_fetch_object($result);
-    if (!$object) {
+    $row = TaggerQueryManager::fetch($result);
+    if (!$row) {
       return false;
     }
-    return $object->value;
+    return $object['value'];
   }
 
   public function has_update_minimal_interval_passed($url, $options) {

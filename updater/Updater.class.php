@@ -9,10 +9,8 @@ class Updater {
 
   function __construct($updates) {
     global $conf;
-    //print_r($conf);
+    $this->tagger = Tagger::getTagger();
     $this->parse_updates($updates);
-    //print_r($updates);
-    exit;
   }
 
   public function parse_updates($updates) {
