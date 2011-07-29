@@ -59,9 +59,12 @@ class NamedEntityMatcher extends Matcher {
       $token->tokenNumber = $first->tokenNumber;
       $token->paragraphNumber = $first->paragraphNumber;
       $token->rating = $first->rating;
+      $token->posRating = $first->posRating;
+      $token->htmlRating = $first->htmlRating;
       foreach ($token_split as $key => $token_part) {
         if ($token_part->htmlRating > $token->htmlRating) {
           $token->htmlRating = $token_part->htmlRating;
+          $token->posRating = $token_part->posRating;
           $token->rating = $token_part->rating;
         }
         $token->tokenParts = $token_split;

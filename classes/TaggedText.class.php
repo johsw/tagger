@@ -87,6 +87,7 @@ class TaggedText {
     }
 
     $this->tagger = Tagger::getTagger();
+    $this->substitutionInMarkTags = $this->tagger->getConfiguration('mark_tags_substitution');
     $this->markTagsStart = $this->tagger->getConfiguration('mark_tags_start');
     $this->markTagsEnd = $this->tagger->getConfiguration('mark_tags_end');
 
@@ -112,7 +113,7 @@ class TaggedText {
     }
     else {
       require_once __ROOT__ . 'classes/PlainTextPreprocessor.class.php';
-      $preprocessor = new PlainTextPreprocessor($this->text, TRUE);
+      $preprocessor = new PlainTextPreprocessor($this->text, $this->returnMarkedText);
     }
     $preprocessor->parse();
     $this->partialTokens = &$preprocessor->tokens;
@@ -173,6 +174,7 @@ class TaggedText {
   }
 
   private function markupText() {
+
     $this->markedupText = '';
 
     foreach ($this->tags as $category_tags) {
@@ -184,7 +186,12 @@ class TaggedText {
               $start_token_part = &current($token->tokenParts);
               $end_token_part = &end($token->tokenParts);
 
-              $start_token_part->text = $this->markTagsStart . $start_token_part->text;
+              $tag_start = $this->markTagsStart;
+              if($this->substitutionInMarkTags) {
+                $tag_start = str_replace("!!ID!!", array_search($start_token_part, $token->tokenParts), $tag_start);
+              }
+
+              $start_token_part->text = $tag_start . $start_token_part->text;
               $end_token_part->text .= $this->markTagsEnd;
 
               $token->hasBeenMarked = TRUE;

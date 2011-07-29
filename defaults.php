@@ -39,6 +39,7 @@
 
   $tagger_conf['mark_tags_start'] = '<strong>';
   $tagger_conf['mark_tags_end'] = '</strong>';
+  $tagger_conf['mark_tags_substitution'] = FALSE;
 
 
   // HTML rating

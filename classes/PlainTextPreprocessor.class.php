@@ -14,7 +14,7 @@ class PlainTextPreprocessor {
 
   public $tokens;
 
-  public function __construct($text, $br_tags_present = FALSE) {
+  public function __construct($text, $mark_tags = FALSE, $br_tags_present = FALSE) {
     $this->tagger = Tagger::getTagger();
 
     if ($br_tags_present) {
@@ -24,6 +24,7 @@ class PlainTextPreprocessor {
     }
     $this->text = trim($text);
 
+    $this->markTags = $mark_tags;
   }
 
 
@@ -36,7 +37,7 @@ class PlainTextPreprocessor {
     $curTokenCount = 0;
     $lookingForWord = FALSE;
 
-    foreach ($this->tokens as $token) {
+    foreach ($this->tokens as &$token) {
       // a newline followed by a word (at some point) denotes a new paragraph
       // i.e. two newlines in a row with whitespace in between only gives one
       // new paragraph (assuming they're followed by an actual word)
@@ -50,6 +51,10 @@ class PlainTextPreprocessor {
       $token->tokenNumber = ++$curTokenCount;
       $token->paragraphNumber = $this->paragraphCount;
 
+    }
+
+    if ($this->markTags) {
+      $this->intermediateHTML = &$this->tokens;
     }
   }
 

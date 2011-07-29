@@ -73,6 +73,8 @@ class Token {
     if($this->tokenParts != NULL) {
       foreach ($this->tokenParts as $partial_token) {
         $partial_token->rating = $this->rating;
+        $partial_token->htmlRating = $this->posRating;
+        $partial_token->posRating = $this->htmlRating;
       }
     }
   }
