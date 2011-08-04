@@ -30,7 +30,7 @@ class HTMLPreprocessor {
 
   public function parse() {
     $this->dom = new DOMDocument("1.0", "UTF-8");
-    $this->dom->loadHTML($this->html);
+    @$this->dom->loadHTML($this->html);
     $this->rateElement($this->dom, 0);
   }
 
