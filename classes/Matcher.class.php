@@ -25,12 +25,13 @@ abstract class Matcher {
   protected function term_query() {
 
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
-      $imploded_words = implode("','", array_keys($this->tokens));
+      $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->tokens)));
       $unmatched = $this->tokens;
 
       // First we find synonyms
       $synonyms = array();
       $query = "SELECT tid, name FROM term_synonym WHERE name IN('$imploded_words') GROUP BY name";
+      TaggerLogManager::logDebug("Synonym-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
       while ($row = TaggerQueryManager::fetch($result)) {
         $synonyms[$row['tid']][] = mb_strtolower($row['name']);
@@ -38,7 +39,7 @@ abstract class Matcher {
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
       $synonym_ids_imploded = implode("','", array_keys($synonyms));
-      $imploded_words = implode("','", array_keys($unmatched));
+      $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($unmatched)));
 
       // Then we find the actual names of entities
       $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY name";
