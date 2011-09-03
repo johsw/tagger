@@ -7,6 +7,10 @@
     'password' => '<password>',
   );
   $tagger_conf['dbhandler'] = 'Default';
+
+  //Tagger default language - the codes are the same as html language codes (http://www.ietf.org/rfc/rfc1766.txt)
+  $tagger_conf['language'] = 'da'; // Others could be sv (Sweden), nn (Norway - Nynorsk) and nb (Norway - Bokmål)
+
   // Data sources for open linked data.
   $tagger_conf['lod_sources'] = array(
     1 => 'DBpedia',
