@@ -4,9 +4,8 @@
  * specific point in the text
  */
 class Token {
-  static $prefix_or_infix = array('bin', 'de', 'du', 'van', 'der', 'von', 'mc', 'mac', 'le', 'for');
-  static $stopwords = array('af', 'alle', 'andet', 'andre', 'at', 'begge', 'da', 'de', 'den', 'denne', 'der', 'deres', 'derfor', 'det', 'dette', 'dig', 'din', 'dog', 'du', 'ej', 'eller', 'en', 'end', 'ene', 'eneste', 'enhver', 'et', 'fem', 'fire', 'flere', 'fleste', 'fordi', 'forrige', 'fra', 'få', 'før', 'god', 'han', 'hans', 'har', 'hendes', 'her', 'hun', 'hvad', 'hvem', 'hver', 'hvilken', 'hvis', 'hvor', 'hvordan', 'hvorfor', 'hvornår', 'i', 'ifølge', 'ikke', 'ind', 'ingen', 'intet', 'jeg', 'jeres', 'kan', 'kom', 'kommer', 'lav', 'lidt', 'lille', 'man ', 'mand', 'mange', 'med', 'meget', 'men', 'mens', 'mere', 'mig', 'ned', 'ni', 'nogen', 'noget', 'ny', 'nyt', 'nær', 'næste', 'næsten', 'og', 'også', 'op', 'otte', 'over', 'på', 'se', 'seks', 'ses', 'siden', 'som', 'stor', 'store', 'syv', 'ti', 'til', 'to', 'tre', 'ud', 'var', 'vi');
-
+  static $prefix_infix;
+  static $stopwords;
   static $initwords;
 
   public $text;
@@ -22,10 +21,15 @@ class Token {
   public $tokenParts = FALSE;
 
   public function __construct($text) {
+    $tagger = Tagger::getTagger();
+    $language = $tagger->getConfiguration('language');
     $this->text = $text;
-    if (NULL == self::$initwords) {
-      $initwords_path = realpath(__ROOT__ .'resources/initwords.txt');
-      self::$initwords = file($initwords_path, FILE_IGNORE_NEW_LINES);
+    $wordlists = array('initwords', 'prefix_infix', 'stopwords');
+    foreach ($wordlists AS $wordlist) {
+      if (self::$$wordlist == NULL) {
+        $path = realpath(__ROOT__ .'resources/'. $wordlist .'/'. $wordlist .'_'. $language .'.txt');
+        self::$$wordlist = file($path, FILE_IGNORE_NEW_LINES);
+      }
     }
   }
 
@@ -49,7 +53,7 @@ class Token {
   }
 
   public function isPrefixOrInfix() {
-    return in_array(mb_strtolower($this->text), self::$prefix_or_infix);
+    return in_array(mb_strtolower($this->text), self::$prefix_infix);
   }
 
   public function __toString() {
