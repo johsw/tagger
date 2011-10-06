@@ -41,7 +41,11 @@ class TaggerQueryHandler {
       $c = __CLASS__;
       self::$instance = new $c;
     }
-    $result = self::$instance->link->query(sprintf($sql, $args));
+    if (count($args)) {
+      $result = self::$instance->link->query(sprintf($sql, $args));
+    } else {
+      $result = self::$instance->link->query($sql);
+    }
     if($result) {
       return $result;
     } else {
