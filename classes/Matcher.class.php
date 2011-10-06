@@ -15,7 +15,7 @@ abstract class Matcher {
     $this->tagger = Tagger::getTagger();
 
     foreach($tokens as $token) {
-      $this->tokens[mb_strtolower($token->text)] = $token;
+      $this->tokens[addslashes(mb_strtolower($token->text))] = $token;
     }
     $this->matches = array();
     $this->nonmatches = array();
