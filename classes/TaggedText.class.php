@@ -11,6 +11,7 @@ class TaggedText {
   private $text;
   private $ner_vocab_ids;
 
+  private $words;
 
   private $tokenParts;
   private $token;
@@ -121,6 +122,13 @@ class TaggedText {
     $this->tokenCount = $preprocessor->tokenCount;
     $this->intermediateHTML = $preprocessor->intermediateHTML;
 
+    // Find words.
+    foreach ($this->partialTokens as $token) {
+      if (!preg_match("/([\s\?,\":\.«»'\(\)\!])/u", $token->text)) {
+        $this->words[] = $token->text;
+      }
+    }
+
     // Rate the partial tokens.
     foreach ($this->partialTokens as $token) {
       $token->rateToken($this->tokenCount, $this->paragraphCount, $this->rating);
@@ -163,6 +171,13 @@ class TaggedText {
       TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
     }
 
+    // Keyword extraction
+    TaggerLogManager::logDebug("Words:\n" . print_r($this->words, true));
+
+    require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
+    $keyword_extractor = new KeywordExtractor($this->words);
+    $keyword_extractor->determine_keywords();
+    $this->tags += $keyword_extractor->tags;
   }
 
   public function getTags() {

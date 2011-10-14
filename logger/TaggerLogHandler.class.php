@@ -76,6 +76,7 @@ class TaggerLogHandler {
     $log_type = TaggerLogManager::$LOG_TYPE[$level];
     $file = fopen($filename, 'a');
     $log_msg = <<<EOH
+
 ------------------------------------ $time ------------------------------------
 Log-type: $log_type
 $msg
