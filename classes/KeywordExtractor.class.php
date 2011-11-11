@@ -37,7 +37,7 @@ class KeywordExtractor {
       if (!empty($subjects)) {
         $implode_subjects_ids = implode(',', array_map('mysql_real_escape_string', array_keys($subjects)));
         
-        $query = "SELECT tid, vid, name FROM term_data WHERE tid IN ($implode_subjects_ids)";
+        $query = "SELECT tid, vid, name FROM $lookup_table WHERE tid IN ($implode_subjects_ids)";
         $result = TaggerQueryManager::query($query);
         while ($row = TaggerQueryManager::fetch($result)) {
           $tag = new Tag($row['name']);

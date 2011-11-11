@@ -55,8 +55,10 @@ class Disambiguator {
   }
   public function getRelatedWords($tag) {
     $tagger_instance = Tagger::getTagger();
+    $db_conf = $tagger_instance->getConfiguration('db');
+    $disambiguation_table = $db_conf['disambiguation_table'];
 
-    $sql = sprintf("SELECT r.tid, GROUP_CONCAT(r.name) AS words FROM term_disambiguation AS r WHERE r.tid IN (%s) GROUP BY r.tid", $tag->meanings);
+    $sql = sprintf("SELECT r.tid, GROUP_CONCAT(r.name) AS words FROM $disambiguation_table AS r WHERE r.tid IN (%s) GROUP BY r.tid", $tag->meanings);
     $matches = array();
     $result = TaggerQueryManager::query($sql);
     if ($result) {
@@ -69,7 +71,10 @@ class Disambiguator {
 
   public function getVocabulary($tid) {
     $tagger_instance = Tagger::getTagger();
-    $sql = sprintf("SELECT c.vid FROM term_data AS c WHERE c.tid = %s LIMIT 0,1", $tid);
+    $db_conf = $tagger_instance->getConfiguration('db');
+    $lookup_table = $db_conf['lookup_table'];
+
+    $sql = sprintf("SELECT c.vid FROM $lookup_table AS c WHERE c.tid = %s LIMIT 0,1", $tid);
     $result = TaggerQueryManager::query($sql);
     $row = TaggerQueryManager::fetch($result);
     $vocab_names = $tagger_instance->getConfiguration('vocab_names');

@@ -23,6 +23,8 @@ abstract class Matcher {
   }
 
   protected function term_query() {
+    $db_conf = $this->tagger->getConfiguration('db');
+    $lookup_table = $db_conf['lookup_table'];
 
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
       $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->tokens)));
@@ -30,7 +32,7 @@ abstract class Matcher {
 
       // First we find synonyms
       $synonyms = array();
-      $query = "SELECT tid, name FROM term_synonym WHERE name IN('$imploded_words') GROUP BY name";
+      $query = "SELECT tid, name FROM $lookup_table WHERE name IN('$imploded_words') AND vid IN($this->vocabularies)";
       TaggerLogManager::logDebug("Synonym-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
       while ($row = TaggerQueryManager::fetch($result)) {
@@ -42,7 +44,7 @@ abstract class Matcher {
       $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($unmatched)));
 
       // Then we find the actual names of entities
-      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM term_data WHERE vid IN($this->vocabularies) AND (name IN('$imploded_words') OR tid IN('$synonym_ids_imploded')) GROUP BY name";
+      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM $lookup_table WHERE vid IN($this->vocabularies) AND tid IN('$synonym_ids_imploded') AND canonical = 1 GROUP BY name";
       TaggerLogManager::logDebug("Match-query:\n" . $query);
       $result = TaggerQueryManager::query($query);
 

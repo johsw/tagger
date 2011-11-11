@@ -234,7 +234,10 @@ class TaggedText {
     }
   }
   private function fetchUris($tid) {
-    $sql = sprintf("SELECT dstid, uri FROM linked_data_sources WHERE tid = %s ORDER BY dstid ASC", $tid);
+    $db_conf = $this->tagger->getConfiguration('db');
+    $linked_data_table = $db_conf['linked_data_table'];
+
+    $sql = sprintf("SELECT dstid, uri FROM $linked_data_table WHERE tid = %s ORDER BY dstid ASC", $tid);
     $result = TaggerQueryManager::query($sql);
     $uris = array();
     $lod_sources = $this->tagger->getConfiguration('lod_sources');
