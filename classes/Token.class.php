@@ -4,7 +4,7 @@
  * specific point in the text
  */
 class Token {
-  static $prefix_or_infix = array('bin', 'de', 'du', 'van', 'der', 'von', 'mc', 'mac', 'le', 'for');
+  static $prefix_or_infix = array('bin', 'de', 'du', 'van', 'der', 'von', 'mc', 'mac', 'le', 'for' ,'of' ,'the');
   static $stopwords = array('af', 'alle', 'andet', 'andre', 'at', 'begge', 'da', 'de', 'den', 'denne', 'der', 'deres', 'derfor', 'det', 'dette', 'dig', 'din', 'dog', 'du', 'ej', 'eller', 'en', 'end', 'ene', 'eneste', 'enhver', 'et', 'fem', 'fire', 'flere', 'fleste', 'fordi', 'forrige', 'fra', 'få', 'før', 'god', 'han', 'hans', 'har', 'hendes', 'her', 'hun', 'hvad', 'hvem', 'hver', 'hvilken', 'hvis', 'hvor', 'hvordan', 'hvorfor', 'hvornår', 'i', 'ifølge', 'ikke', 'ind', 'ingen', 'intet', 'jeg', 'jeres', 'kan', 'kom', 'kommer', 'lav', 'lidt', 'lille', 'man ', 'mand', 'mange', 'med', 'meget', 'men', 'mens', 'mere', 'mig', 'ned', 'ni', 'nogen', 'noget', 'ny', 'nyt', 'nær', 'næste', 'næsten', 'og', 'også', 'op', 'otte', 'over', 'på', 'se', 'seks', 'ses', 'siden', 'som', 'stor', 'store', 'syv', 'ti', 'til', 'to', 'tre', 'ud', 'var', 'vi');
 
   static $initwords;

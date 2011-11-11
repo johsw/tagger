@@ -196,13 +196,13 @@ class TaggedText {
       foreach ($category_tags as $tag) {
         foreach ($tag->tokens as $synonym_tokens) {
           foreach ($synonym_tokens as $token) {
-            if(!$token->hasBeenMarked) {
+            if (!$token->hasBeenMarked) {
               reset($token->tokenParts);
               $start_token_part = &current($token->tokenParts);
               $end_token_part = &end($token->tokenParts);
 
               $tag_start = $this->markTagsStart;
-              if($this->substitutionInMarkTags) {
+              if ($this->substitutionInMarkTags) {
                 $tag_start = str_replace("!!ID!!", array_search($start_token_part, $token->tokenParts), $tag_start);
               }
 
