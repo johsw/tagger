@@ -29,7 +29,7 @@ class PlainTextPreprocessor {
 
 
   public function parse() {
-    $tokenizer = new Tokenizer($this->text);
+    $tokenizer = new Tokenizer($this->text, true);
     $this->tokens = $tokenizer->tokens;
     $this->tokenCount = count($this->tokens);
 

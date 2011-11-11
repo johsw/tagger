@@ -35,7 +35,7 @@ class EntityPreprocessor {
         if (isset($this->tokens[$i +2])) {
           $next = $this->tokens[$i +2];
 
-          while (($next->isUpperCase() || $next->isPrefixOrInfix())) {
+          while (($next->isUpperCase() || $next->isPrefixOrInfix()) && $next->paragraphNumber == $token->paragraphNumber) {
 
             // Jump two words.
             $i += 2;

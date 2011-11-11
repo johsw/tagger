@@ -66,7 +66,7 @@ class HTMLPreprocessor {
 
     // rate the element if it is a text element
     if ($element->nodeName == '#text') {
-      $tokenizer = new Tokenizer($element->textContent);
+      $tokenizer = new Tokenizer($element->textContent, true);
       foreach ($tokenizer->tokens as $token) {
         $token->htmlRating = $cur_rating;
         $token->paragraphNumber = $this->paragraphCount;

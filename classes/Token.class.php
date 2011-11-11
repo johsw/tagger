@@ -61,10 +61,12 @@ class Token {
     $a = log(1 - (1 - $min_pos_rating) * $rating['positional']);
 
     if ($paragraph_count >= 3) {
-      $this->posRating = exp($a * (($this->paragraphNumber - 1) / ($paragraph_count - 1)));
+      //$this->posRating = exp($a * (($this->paragraphNumber - 1) / ($paragraph_count - 1)));
+      $this->posRating = exp($a * (($this->paragraphNumber - 1) / ($paragraph_count + 1)));
     }
     else {
-      $this->posRating = exp($a * (($this->tokenNumber - 1) / ($token_count - 1)));
+      //$this->posRating = exp($a * (($this->tokenNumber - 1) / ($token_count - 1)));
+      $this->posRating = exp($a * (($this->tokenNumber - 1) / ($token_count + 1)));
     }
 
     // ATTENTION: this is the rating expression for single tokens!
