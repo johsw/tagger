@@ -15,10 +15,13 @@ class KeywordExtractor {
   }
 
   public function determine_keywords() {
+    $db_conf = $this->tagger->getConfiguration('db');
+    $word_relations_table = $db_conf['word_relations_table'];
+    $lookup_table = $db_conf['lookup_table'];
 
     $implode_words = implode("','", array_map('mysql_real_escape_string', $this->words));
 
-    $query = "SELECT * FROM word_relations WHERE word IN ('$implode_words.')";
+    $query = "SELECT * FROM $word_relations_table WHERE word IN ('$implode_words.')";
     TaggerLogManager::logDebug("Query:\n" . $query);
     $result = TaggerQueryManager::query($query);
     if ($result) {
