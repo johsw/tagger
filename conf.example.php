@@ -38,3 +38,15 @@
   // webservice. Leave an empty array if you want to allow access for all.
   $tagger_conf['service_allow_referer'] = array('tagger.dk');
 
+
+
+  // Keyword-extraction configuration
+  $tagger_conf['keyword']['property'] = 'diff_outer_doc_freq';
+  $tagger_conf['keyword']['normalize'] = false;
+
+  // Database table names
+  $tagger_conf['db']['docstats_table'] = 'tagger_docstats';
+
+  $tagger_conf['db']['word_relations_table'] = 'tagger_word_relations_' . $tagger_conf['keyword']['property'];
+
+
