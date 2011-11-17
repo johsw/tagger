@@ -52,12 +52,10 @@ class TaggedText {
       $this->text = utf8_encode($this->text);
     }
 
-
     $this->tagger = Tagger::getTagger();
     $this->substitutionInMarkTags = $this->tagger->getConfiguration('mark_tags_substitution');
     $this->markTagsStart = $this->tagger->getConfiguration('mark_tags_start');
     $this->markTagsEnd = $this->tagger->getConfiguration('mark_tags_end');
-
 
 
     $this->ner_vocab_ids = $options['ner_vocab_ids'];
@@ -66,7 +64,7 @@ class TaggedText {
     $this->rateHTML = $options['rate_html'];
     $this->returnMarkedText = $options['return_marked_text'];
     $this->disambiguate = $options['disambiguate'];
-    $this->return_uris = $options['return_uris';
+    $this->return_uris = $options['return_uris'];
     $this->log_unmatched = $options['log_unmatched'];
     $this->nl2br = $options['nl2br'];
   }
@@ -96,55 +94,60 @@ class TaggedText {
       }
     }
 
-    // Rate the partial tokens.
-    foreach ($this->partialTokens as $token) {
-      $token->rateToken($this->tokenCount, $this->paragraphCount, $this->rating);
+    // Do NER if NER-vocabs are provided
+    if (count($this->ner_vocab_ids) > 0) {
+      // Rate the partial tokens.
+      foreach ($this->partialTokens as $token) {
+        $token->rateToken($this->tokenCount, $this->paragraphCount, $this->rating);
+      }
+      TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
+
+      // Do named entity recognition: find named entities.
+      $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->ner_vocab_ids);
+      $ner_matcher->match();
+      $this->tags = $ner_matcher->get_matches();
+
+      // Rate the tags (named entities).
+      $rating = $this->rating;
+      $tag_rate_closure = function($tag) use ($rating) {
+        $tag->rateTag($rating);
+      };
+      array_walk_recursive($this->tags, $tag_rate_closure);
+
+
+      // Capture unmatched tags
+      if ($this->log_unmatched) {
+        $unmatched_entities = $ner_matcher->get_nonmatches();
+        $unmatched = new Unmatched($unmatched_entities);
+        $unmatched->logUnmatched();
+
+      }
+      // Disambiguate
+      if ($this->disambiguate) {
+        require_once 'classes/Disambiguator.class.php';
+        $disambiguator = new Disambiguator($this->tags, $this->text);
+        $this->tags = $disambiguator->disambiguate();
+      }
+      if ($this->return_uris) {
+        $this->buildUriData();
+      }
+
+      // mark up found tags in HTML
+      if ($this->returnMarkedText) {
+        $this->markupText();
+        TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
+      }
     }
-    TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
+     // Do NER if Keyword-vocabs are provided
+    if (count($this->keyword_vocab_ids) > 0) {
+      // Keyword extraction
+      TaggerLogManager::logDebug("Words:\n" . print_r($this->words, true));
 
-    // Do named entity recognition: find named entities.
-    $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->ner_vocab_ids);
-    $ner_matcher->match();
-    $this->tags = $ner_matcher->get_matches();
-
-    // Rate the tags (named entities).
-    $rating = $this->rating;
-    $tag_rate_closure = function($tag) use ($rating) {
-      $tag->rateTag($rating);
-    };
-    array_walk_recursive($this->tags, $tag_rate_closure);
-
-
-    // Capture unmatched tags
-    if ($this->log_unmatched) {
-      $unmatched_entities = $ner_matcher->get_nonmatches();
-      $unmatched = new Unmatched($unmatched_entities);
-      $unmatched->logUnmatched();
-
+      require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
+      $keyword_extractor = new KeywordExtractor($this->words);
+      $keyword_extractor->determine_keywords();
+      $this->tags += $keyword_extractor->tags;
     }
-    // Disambiguate
-    if ($this->disambiguate) {
-      require_once 'classes/Disambiguator.class.php';
-      $disambiguator = new Disambiguator($this->tags, $this->text);
-      $this->tags = $disambiguator->disambiguate();
-    }
-    if ($this->return_uris) {
-      $this->buildUriData();
-    }
-
-    // mark up found tags in HTML
-    if ($this->returnMarkedText) {
-      $this->markupText();
-      TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
-    }
-
-    // Keyword extraction
-    TaggerLogManager::logDebug("Words:\n" . print_r($this->words, true));
-
-    require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
-    $keyword_extractor = new KeywordExtractor($this->words);
-    $keyword_extractor->determine_keywords();
-    $this->tags += $keyword_extractor->tags;
   }
 
   public function getTags() {
