@@ -62,6 +62,11 @@
     'h3',
   );
 
+  
+  // Minimum one full keyword per 250 words
+  $tagger_conf['keyword_threshold'] = 1/250;
+
+
   // Settings for logging
   $tagger_conf['log_handler'] = 'Default';
   $tagger_conf['logging_type'] = 'file'; // file db

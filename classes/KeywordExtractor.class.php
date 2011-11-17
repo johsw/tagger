@@ -7,11 +7,17 @@ class KeywordExtractor {
   public $words;
   public $tags;
 
+  private $constant;
+
   function __construct($words) {
     $this->tagger = Tagger::getTagger();
 
-    $this->words = $words;
     $this->tags = array();
+    $this->constant = 1/count($words);
+
+    $words = array_map('mb_strtolower', $words);
+    $this->words = array_count_values($words);
+
   }
 
   public function determine_keywords() {
@@ -19,7 +25,7 @@ class KeywordExtractor {
     $word_relations_table = $db_conf['word_relations_table'];
     $lookup_table = $db_conf['lookup_table'];
 
-    $implode_words = implode("','", array_map('mysql_real_escape_string', $this->words));
+    $implode_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->words)));
 
     $query = "SELECT * FROM $word_relations_table WHERE word IN ('$implode_words.')";
     TaggerLogManager::logDebug("Query:\n" . $query);
@@ -28,13 +34,30 @@ class KeywordExtractor {
       $subjects = array();
 
       while ($row = TaggerQueryManager::fetch($result)) {
-        if(!isset($subjects[$row['tid']]['rating'])) { $subjects[$row['tid']]['rating'] = 0; }
-        //if(!isset($subjects[$row->tid]['words'])) { $subjects[$row->tid]['words'] = array(); }
-        $subjects[$row['tid']]['rating'] += $row['score'];
-        //$subjects[$row->tid]['words'][] = array('word' => $row->word, 'rating' => $row->score);
+        if (array_key_exists(mb_strtolower($row['word']), $this->words)) {
+          if (!isset($subjects[$row['tid']]['rating'])) { $subjects[$row['tid']]['rating'] = 0; }
+          //if(!isset($subjects[$row->tid]['words'])) { $subjects[$row->tid]['words'] = array(); }
+          $subjects[$row['tid']]['rating'] += $row['score'] * $this->words[mb_strtolower($row['word'])];
+          //$subjects[$row->tid]['words'][] = array('word' => $row->word, 'rating' => $row->score);
+        }
       }
 
-      if (isset($subjects[0])) { unset($subjects[0]); }
+      $constant = $this->constant;
+      // Normalize scores
+      $normalize = function($s) use ($constant) {
+        $s['rating'] *= $constant;
+        return $s;
+      };
+      $subjects = array_map($normalize, $subjects);
+
+      // Threshold
+      $threshold = $this->tagger->getConfiguration('keyword_threshold');
+      $thresher = function($subject) use ($threshold) {
+        return $subject['rating'] > $threshold;
+      };
+      $subjects = array_filter($subjects, $thresher);
+
+      //if (isset($subjects[0])) { unset($subjects[0]); }
       TaggerLogManager::logDebug("Keywords:\n" . print_r($subjects, true));
 
       if (!empty($subjects)) {

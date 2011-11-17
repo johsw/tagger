@@ -18,6 +18,8 @@
       'type' => $tagger_conf['db']['type'],
     );
   }
+  // DATABASE TABLE NAMES ARE DEFINED AT END OF THIS FILE
+
 
   // Names and ids of your vocabularies.
   $tagger_conf['vocab_names'] = array(
