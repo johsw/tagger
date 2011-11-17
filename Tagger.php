@@ -59,34 +59,63 @@ class Tagger {
     trigger_error('Clone is not allowed.', E_USER_ERROR);
   }
 
+  /**
+   * This is the main function to call, when you use Tagger.
+   *
+   * @param $text
+   *   The text you want to tag.
+   * @param array $options
+   *   An associative array of additional options, with the following elements:
+   *   - 'ner_vocab_ids': An numeric array vocabularies you want to use for
+   *     NER (named entity recognition). Keys are vocabulary ids. Values are
+   *     vocabulary names.
+   *   - 'keyword_vocab_ids': An numeric array vocabularies you want to use for
+   *     Keyword Extraction´. Keys are vocabulary ids. Values are vocabulary names.
+   *   - 'rate_html': Boolean indication wheter html-tags should be used to rate
+   *     relevancy.
+   *   - 'return_marked_text': Boolean, indicates whether Tagger should return
+   *     text with markup.
+   *   - 'rating': An array TODO: explain array
+   *   - 'disambiguate': Boolean indicating whether Tagger should try to disambiguate
+   *     ambigous tags.
+   *   - 'return_uris': Boolean indicating wheter Tagger should return URI's for
+   *     each tag
+   *   - 'log_unmatched': Boolean indicating whether unmatched potential 
+   *     NER candidates should be logged
+   *   - 'nl2br': Boolean indicating whether newlines should be convertet to br-tags
+   * @return
+   *   An HTML string containing a link to the given path.
+   */
 
-
-  public function tagText($text, $ner_vocab_ids = array(), $rate_html = TRUE, $return_marked_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $log_unmatched = FALSE, $nl2br = FALSE) {
-    if (empty($ner_vocab_ids)) {
-      $ner_vocab_names = $this->getConfiguration('ner_vocab_names');
-      $ner_vocab_ids = array_keys($ner_vocab_names);
-      if (!isset($ner_vocab_ids) || empty($ner_vocab_ids)) {
-        throw new ErrorException('Missing vocab definition in configuration.');
-      }
+  public function tagText($text, $options) {
+    if (empty($options)) {
+      $options = array();
+    }
+    if (empty($options['ner_vocab_ids']) || !isset($options['ner_vocab_ids'])) {
+      $options['ner_vocab_ids'] = $this->getConfiguration('ner_vocab_ids');
+    }
+    if (empty($options['keyword_vocab_ids']) || !isset($options['keyword_vocab_ids'])) {
+      $options['keyword_vocab_ids'] = $this->getConfiguration('keyword_vocab_ids');
     }
 
-    if (empty($rating)) {
-      $rating['frequency'] = $this->getConfiguration('frequency_rating');
-      $rating['positional'] = $this->getConfiguration('positional_rating');
-      $rating['HTML'] = $this->getConfiguration('HTML_rating');
+    if (empty($options['ner_vocab_ids']) && empty($options['keyword_vocab_ids'])) {
+      throw new ErrorException('Missing vocab definition in configuration.');
+    }
+    if (empty($options['rating'])) {
+      $options['rating']['frequency'] = $this->getConfiguration('frequency_rating');
+      $options['rating']['positional'] = $this->getConfiguration('positional_rating');
+      $options['rating']['HTML'] = $this->getConfiguration('HTML_rating');
 
-      $rating['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
-      $rating['positional_critical_token_count'] = $this->getConfiguration('positional_critical_token_count_rating');
+      $options['rating']['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
+      $options['rating']['positional_critical_token_count'] = $this->getConfiguration('positional_critical_token_count_rating');
 
 
-      if ($key = array_search(FALSE, $rating, TRUE)) {
+      if ($key = array_search(FALSE, $options['rating'], TRUE)) {
         throw new ErrorException('Missing ' . $key . '_rating definition in configuration.');
       }
     }
 
-
-
-    $tagged_text = new TaggedText($text, $ner_vocab_ids, $rate_html, $return_marked_text, $rating, $disambiguate, $return_uris, $log_unmatched, $nl2br);
+    $tagged_text = new TaggedText($text, $options);
     $tagged_text->process();
     return $tagged_text;
   }
