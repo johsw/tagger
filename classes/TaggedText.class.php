@@ -36,17 +36,10 @@ class TaggedText {
    *
    * @param string $text
    *   Text to be tagged.
-   * @param array $rating
-   *   An associative array containing one more of the keys:
-   *     - frequency
-   *     - position
-   *     - tags
-   *   Where each has a value between 0 and 1 to indicate the weighting of each
-   *   rating method.
-   * @param array $ner_vocab_ids
-   *   The database-IDs of the vocabularies to be used.
+   * @param array $options
+   *   See documentation of tagText funtion
    */
-  public function __construct($text, $ner_vocab_ids = array(), $rate_html = FALSE, $return_marked_text = FALSE, $rating = array(), $disambiguate = FALSE, $return_uris = FALSE, $log_unmatched = FALSE, $nl2br = FALSE) {
+  public function __construct($text, $options) {
 
     if (empty($text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
@@ -59,33 +52,6 @@ class TaggedText {
       $this->text = utf8_encode($this->text);
     }
 
-    // If no vocabulary database-ids are given - load them from config
-    if (empty($ner_vocab_ids)) {
-      require_once __ROOT__ . 'Tagger.php';
-      $this->tagger = Tagger::getTagger();
-      $ner_vocab_names = $this->tagger->getConfiguration('ner_vocab_names');
-      $ner_vocab_ids = array_keys($ner_vocab_names);
-      if (!isset($ner_vocab_ids) || empty($ner_vocab_ids)) {
-        throw new ErrorException('Missing vocab definition in configuration.');
-      }
-    }
-
-    // If no rating array is given - load it from configuration
-    if (empty($rating)) {
-      require_once __ROOT__ . 'Tagger.php';
-      $this->tagger = Tagger::getTagger();
-      $rating['frequency'] = $this->tagger->getConfiguration('frequency_rating');
-      $rating['positional'] = $this->tagger->getConfiguration('positional_rating');
-      $rating['HTML'] = $this->tagger->getConfiguration('HTML_rating');
-
-      $rating['positional_minimum'] = $this->tagger->getConfiguration('positional_minimum_rating');
-      $rating['positional_critical_token_count'] = $this->tagger->getConfiguration('positional_critical_token_count_rating');
-
-
-      if ($key = array_search(FALSE, $rating, TRUE)) {
-        throw new ErrorException('Missing ' . $key . '_rating definition in configuration.');
-      }
-    }
 
     $this->tagger = Tagger::getTagger();
     $this->substitutionInMarkTags = $this->tagger->getConfiguration('mark_tags_substitution');
@@ -94,14 +60,15 @@ class TaggedText {
 
 
 
-    $this->ner_vocab_ids = $ner_vocab_ids;
-    $this->rating = $rating;
-    $this->rateHTML = $rate_html;
-    $this->returnMarkedText = $return_marked_text;
-    $this->disambiguate = $disambiguate;
-    $this->return_uris = $return_uris;
-    $this->log_unmatched = $log_unmatched;
-    $this->nl2br = $nl2br;
+    $this->ner_vocab_ids = $options['ner_vocab_ids'];
+    $this->keyword_vocab_ids = $options['keyword_vocab_ids'];
+    $this->rating = $options['rating'];
+    $this->rateHTML = $options['rate_html'];
+    $this->returnMarkedText = $options['return_marked_text'];
+    $this->disambiguate = $options['disambiguate'];
+    $this->return_uris = $options['return_uris';
+    $this->log_unmatched = $options['log_unmatched'];
+    $this->nl2br = $options['nl2br'];
   }
 
   public function process() {
