@@ -6,6 +6,8 @@
 class Token {
 
   static $initwords;
+  static $prefix_infix;
+  static $stopwords;
 
   public $text;
 
