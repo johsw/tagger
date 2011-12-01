@@ -20,10 +20,6 @@
     5 => 'New York Times',
     6 => 'NYT search api'
     );
-  // The hostnames of the sites that you would like to be allowed to call the
-  // webservice. Leave an empty array if you want to allow access for all.
-  $tagger_conf['service_allow_referer'] = array('tagger.dk');
-
 
   // Settings for ratings of Named Entities
   // These should be numbers between 0 and 1
