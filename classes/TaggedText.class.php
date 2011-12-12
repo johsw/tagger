@@ -9,7 +9,6 @@ require_once __ROOT__ . 'classes/Tag.class.php';
 class TaggedText {
 
   private $text;
-  private $ner_vocab_ids;
 
   private $words;
 
@@ -19,16 +18,10 @@ class TaggedText {
   private $tokenCount;
   private $paragraphCount;
 
-  private $markedupText;
+  private $highlightedText;
   private $intermediateHTML;
 
-
-  private $rateHTML = TRUE;
-  private $returnMarkedText = FALSE;
-  private $nl2br = FALSE;
-  private $return_uris = FALSE;
-  private $log_unmatched = FALSE;
-  private $disambiguate = FALSE;
+  private $options = array();
   private $tagger;
 
   /**
@@ -53,33 +46,21 @@ class TaggedText {
     }
 
     $this->tagger = Tagger::getTagger();
-    $this->substitutionInMarkTags = $this->tagger->getConfiguration('mark_tags_substitution');
-    $this->markTagsStart = $this->tagger->getConfiguration('mark_tags_start');
-    $this->markTagsEnd = $this->tagger->getConfiguration('mark_tags_end');
+    $this->options = $options;
 
-
-    $this->ner_vocab_ids = $options['ner_vocab_ids'];
-    $this->keyword_vocab_ids = $options['keyword_vocab_ids'];
-    $this->rating = $options['rating'];
-    $this->rateHTML = $options['rate_html'];
-    $this->returnMarkedText = $options['return_marked_text'];
-    $this->disambiguate = $options['disambiguate'];
-    $this->return_uris = $options['return_uris'];
-    $this->log_unmatched = $options['log_unmatched'];
-    $this->nl2br = $options['nl2br'];
   }
 
   public function process() {
     TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
     // Tokenize - with/without HTML.
-    if ($this->rateHTML) {
+    if ($this->options['rating']['HTML'] !== 0) {
       require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
-      $preprocessor = new HTMLPreprocessor($this->text, $this->returnMarkedText);
+      $preprocessor = new HTMLPreprocessor($this->text, $this->options);
     }
     else {
       require_once __ROOT__ . 'classes/PlainTextPreprocessor.class.php';
-      $preprocessor = new PlainTextPreprocessor($this->text, $this->returnMarkedText);
+      $preprocessor = new PlainTextPreprocessor($this->text, $this->options);
     }
     $preprocessor->parse();
     $this->partialTokens = &$preprocessor->tokens;
@@ -95,20 +76,20 @@ class TaggedText {
     }
 
     // Do NER if NER-vocabs are provided
-    if (count($this->ner_vocab_ids) > 0) {
+    if (count($this->options['ner_vocab_ids']) > 0) {
       // Rate the partial tokens.
       foreach ($this->partialTokens as $token) {
-        $token->rateToken($this->tokenCount, $this->paragraphCount, $this->rating);
+        $token->rateToken($this->tokenCount, $this->paragraphCount, $this->options['rating']);
       }
       TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
       // Do named entity recognition: find named entities.
-      $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->ner_vocab_ids);
+      $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->options['ner_vocab_ids']);
       $ner_matcher->match();
       $this->tags = $ner_matcher->get_matches();
 
       // Rate the tags (named entities).
-      $rating = $this->rating;
+      $rating = $this->options['rating'];
       $tag_rate_closure = function($tag) use ($rating) {
         $tag->rateTag($rating);
       };
@@ -116,30 +97,29 @@ class TaggedText {
 
 
       // Capture unmatched tags
-      if ($this->log_unmatched) {
+      if ($this->options['log_unmatched']) {
         $unmatched_entities = $ner_matcher->get_nonmatches();
         $unmatched = new Unmatched($unmatched_entities);
         $unmatched->logUnmatched();
-
       }
       // Disambiguate
-      if ($this->disambiguate) {
+      if ($this->options['disambiguate']) {
         require_once 'classes/Disambiguator.class.php';
         $disambiguator = new Disambiguator($this->tags, $this->text);
         $this->tags = $disambiguator->disambiguate();
       }
-      if ($this->return_uris) {
+      if ($this->options['return_uris']) {
         $this->buildUriData();
       }
 
       // mark up found tags in HTML
-      if ($this->returnMarkedText) {
-        $this->markupText();
-        TaggerLogManager::logDebug("Marked HTML:\n" . $this->markupText());
+      if ($this->options['highlight']['enable']) {
+        $this->highlightTags();
+        TaggerLogManager::logDebug("HTML with highlighted tags:\n" . $this->highlightedText);
       }
     }
      // Do NER if Keyword-vocabs are provided
-    if (count($this->keyword_vocab_ids) > 0) {
+    if (count($this->options['keyword_vocab_ids']) > 0) {
       // Keyword extraction
       TaggerLogManager::logDebug("Words:\n" . print_r($this->words, true));
 
@@ -154,32 +134,32 @@ class TaggedText {
     return $this->tags;
   }
 
-  public function getMarkedupText() {
-    return $this->markedupText;
+  public function getHighlightedText() {
+    return $this->highlightedText;
   }
 
-  private function markupText() {
+  private function highlightTags() {
 
-    $this->markedupText = '';
+    $this->highlightedText = '';
 
     foreach ($this->tags as $category_tags) {
       foreach ($category_tags as $tag) {
         foreach ($tag->tokens as $synonym_tokens) {
           foreach ($synonym_tokens as $token) {
-            if (!$token->hasBeenMarked) {
+            if (!$token->hasBeenHighlighted) {
               reset($token->tokenParts);
               $start_token_part = &current($token->tokenParts);
               $end_token_part = &end($token->tokenParts);
 
-              $tag_start = $this->markTagsStart;
-              if ($this->substitutionInMarkTags) {
+              $tag_start = $this->options['highlight']['start_tag'];
+              if ($this->options['highlight']['substitution']) {
                 $tag_start = str_replace("!!ID!!", array_search($start_token_part, $token->tokenParts), $tag_start);
               }
 
               $start_token_part->text = $tag_start . $start_token_part->text;
-              $end_token_part->text .= $this->markTagsEnd;
+              $end_token_part->text .= $this->options['highlight']['end_tag'];
 
-              $token->hasBeenMarked = TRUE;
+              $token->hasBeenHighlighted = TRUE;
             }
           }
         }
@@ -187,10 +167,10 @@ class TaggedText {
     }
 
     foreach ($this->intermediateHTML as $element) {
-      $this->markedupText .= $element;
+      $this->highlightedText .= $element;
     }
 
-    return $this->markedupText;
+    return $this->highlightedText;
   }
 
 
