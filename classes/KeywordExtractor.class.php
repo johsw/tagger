@@ -8,8 +8,9 @@ class KeywordExtractor {
   public $tags;
 
   private $constant;
+  private $options;
 
-  function __construct($words) {
+  function __construct($words, $options) {
     $this->tagger = Tagger::getTagger();
 
     $this->tags = array();
@@ -18,6 +19,7 @@ class KeywordExtractor {
     $words = array_map('mb_strtolower', $words);
     $this->words = array_count_values($words);
 
+    $this->options = $options;
   }
 
   public function determine_keywords() {
@@ -62,8 +64,9 @@ class KeywordExtractor {
 
       if (!empty($subjects)) {
         $implode_subjects_ids = implode(',', array_map('mysql_real_escape_string', array_keys($subjects)));
+        $vocab_ids = implode(',', $this->options['keyword_vocab_ids']);
         
-        $query = "SELECT tid, vid, name FROM $lookup_table WHERE tid IN ($implode_subjects_ids)";
+        $query = "SELECT tid, vid, name FROM $lookup_table WHERE tid IN ($implode_subjects_ids) AND vid IN ($vocab_ids)";
         $result = TaggerQueryManager::query($query);
         while ($row = TaggerQueryManager::fetch($result)) {
           $tag = new Tag($row['name']);

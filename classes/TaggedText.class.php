@@ -124,7 +124,7 @@ class TaggedText {
       TaggerLogManager::logDebug("Words:\n" . print_r($this->words, true));
 
       require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
-      $keyword_extractor = new KeywordExtractor($this->words);
+      $keyword_extractor = new KeywordExtractor($this->words, $this->options);
       $keyword_extractor->determine_keywords();
       $this->tags += $keyword_extractor->tags;
     }
