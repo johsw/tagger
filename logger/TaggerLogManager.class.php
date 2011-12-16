@@ -31,7 +31,8 @@ class TaggerLogManager {
       self::$instance = new $c;
     }
 
-    $log_handler = self::$tagger->getConfiguration('log_handler');
+    $conf = self::$tagger->getConfiguration('log');
+    $log_handler = $conf['handler'];
     if (!isset($log_handler) || (isset($log_handler) && $log_handler == 'Default')) {
       include_once 'TaggerLogHandler.class.php';
       return TaggerLogHandler::logMsg($msg, $level);

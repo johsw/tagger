@@ -101,34 +101,86 @@ class Tagger {
     if (empty($options)) {
       $options = array();
     }
-    if (empty($options['ner_vocab_ids']) || !isset($options['ner_vocab_ids'])) {
-      $options['ner_vocab_ids'] = $this->getConfiguration('ner_vocab_ids');
-    }
-    if (empty($options['keyword_vocab_ids']) || !isset($options['keyword_vocab_ids'])) {
-      $options['keyword_vocab_ids'] = $this->getConfiguration('keyword_vocab_ids');
+
+    // let $options array override $configuration (i.e. conf.php and defaults.php)
+    foreach($this->configuration as $key => $value) {
+      if (!isset($options[$key])) {
+        $options[$key] = $value;
+      }
+      else {
+        if(is_array($options[$key])) {
+          if ($key == 'ner_vocab_ids' || $key == 'keyword_vocab_ids') {
+            // we allow empty arrays here because that is how
+            // you disable NER or Keyword Extraction
+            continue;
+          }
+          else {
+            $options[$key] = array_merge_recursive_simple($this->configuration[$key], $options[$key]);
+          }
+        }
+      }
     }
 
     if (empty($options['ner_vocab_ids']) && empty($options['keyword_vocab_ids'])) {
       throw new ErrorException('Missing vocab definition in configuration.');
-    }
-    if (empty($options['rating'])) {
-      $options['rating']['frequency'] = $this->getConfiguration('frequency_rating');
-      $options['rating']['positional'] = $this->getConfiguration('positional_rating');
-      $options['rating']['HTML'] = $this->getConfiguration('HTML_rating');
-
-      $options['rating']['positional_minimum'] = $this->getConfiguration('positional_minimum_rating');
-      $options['rating']['positional_critical_token_count'] = $this->getConfiguration('positional_critical_token_count_rating');
-
-
-      if ($key = array_search(FALSE, $options['rating'], TRUE)) {
-        throw new ErrorException('Missing ' . $key . '_rating definition in configuration.');
-      }
     }
 
     $tagged_text = new TaggedText($text, $options);
     $tagged_text->process();
     return $tagged_text;
   }
+}
+
+
+/*
+Taken from:
+http://php.net/manual/en/function.array-merge-recursive.php
+walf 26-May-2011 05:23
+
+Recursively merges arrays, but duplicate string keys are overwritten
+if the value is not an array.
+
+$merge = array_merge_recursive_simple($a1, $a2, $a3 ...)
+The values of $a3 overwrites those of $a1 and $a2 assuming they have
+duplicate keys. (string keys)
+e.g. $a1["b"] = "foo"
+     $a2["b"] = "bar"
+gives
+$merge["b"] === "bar"
+
+Values with numeric keys are simply appended - the key is NOT preserved.
+e.g. $a1[4] = "foo"
+     $a2[4] = "bar"
+gives
+$merge[0] === "foo"
+$merge[1] === "bar"
+*/
+function array_merge_recursive_simple() {
+
+    if (func_num_args() < 2) {
+        trigger_error(__FUNCTION__ .' needs two or more array arguments', E_USER_WARNING);
+        return;
+    }
+    $arrays = func_get_args();
+    $merged = array();
+    while ($arrays) {
+        $array = array_shift($arrays);
+        if (!is_array($array)) {
+            trigger_error(__FUNCTION__ .' encountered a non array argument', E_USER_WARNING);
+            return;
+        }
+        if (!$array)
+            continue;
+        foreach ($array as $key => $value)
+            if (is_string($key))
+                if (is_array($value) && array_key_exists($key, $merged) && is_array($merged[$key]))
+                    $merged[$key] = call_user_func(__FUNCTION__, $merged[$key], $value);
+                else
+                    $merged[$key] = $value;
+            else
+                $merged[] = $value;
+    }
+    return $merged;
 }
 
 

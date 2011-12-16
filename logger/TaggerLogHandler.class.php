@@ -15,10 +15,10 @@ class TaggerLogHandler {
   private function __construct($logging_level = NULL, $logging_type = NULL) {
 
     self::$tagger = Tagger::getTagger();
+    $conf = self::$tagger->getConfiguration('log');
 
     if ($logging_level == NULL) {
-      $conf = strtolower(self::$tagger->getConfiguration('logging_level'));
-      if ($key = array_search($conf, array_map('strtolower', TaggerLogManager::$LOG_TYPE))) {
+      if ($key = array_search(strtolower($conf['level']), array_map('strtolower', TaggerLogManager::$LOG_TYPE))) {
         self::$loggingLevel = $key;
       }
       else {
@@ -26,11 +26,10 @@ class TaggerLogHandler {
       }
     }
     if ($logging_type == NULL) {
-      $conf = strtolower(self::$tagger->getConfiguration('logging_type'));
-      if ($conf == 'db') {
+      if ($conf['type'] == 'db') {
         self::$loggingType = self::DB_LOG;
       }
-      elseif ($conf == 'terminal') {
+      elseif ($conf['type'] == 'terminal') {
         self::$loggingType = self::TERMINAL_LOG;
       }
       else {

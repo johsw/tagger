@@ -7,24 +7,23 @@ class PlainTextPreprocessor {
   public $paragraphCount = 0;
   public $tokenCount = 0;
 
-  public $markTags;
   public $intermediateHTML;
 
   private $tagger;
 
   public $tokens;
 
-  public function __construct($text, $mark_tags = FALSE, $br_tags_present = FALSE) {
+  public function __construct($text, $options) {
     $this->tagger = Tagger::getTagger();
 
-    if ($br_tags_present) {
+    if ($options['br2nl']) {
       $text = strtr($text, "\r", '');
       $text = strtr($text, "\n", '');
       $text = $this->br2nl($text);
     }
     $this->text = trim($text);
 
-    $this->markTags = $mark_tags;
+    $this->options = $options;
   }
 
 
@@ -53,7 +52,7 @@ class PlainTextPreprocessor {
 
     }
 
-    if ($this->markTags) {
+    if ($this->options['highlight']['enable']) {
       $this->intermediateHTML = &$this->tokens;
     }
   }
