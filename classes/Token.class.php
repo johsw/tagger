@@ -10,6 +10,7 @@ class Token {
   static $stopwords;
 
   public $text;
+  public $text_lowercase;
 
   public $rating = 0;
   public $posRating = 1;
@@ -24,12 +25,15 @@ class Token {
   public function __construct($text) {
     $tagger = Tagger::getTagger();
     $language = $tagger->getConfiguration('language');
+
     $this->text = $text;
+    $this->text_lowercase = mb_strtolower($this->text, 'UTF-8');
+
     $wordlists = array('initwords', 'prefix_infix', 'stopwords');
     foreach ($wordlists AS $wordlist) {
       if (self::$$wordlist == NULL) {
         $path = realpath(__ROOT__ .'resources/'. $wordlist .'/'. $wordlist .'_'. $language .'.txt');
-        self::$$wordlist = file($path, FILE_IGNORE_NEW_LINES);
+        self::$$wordlist = array_flip(file($path, FILE_IGNORE_NEW_LINES));
       }
     }
   }
@@ -39,22 +43,19 @@ class Token {
   }
 
   public function isUpperCase() {
-    $text = $this->text;
-    return $text != mb_strtolower($text, 'UTF-8');
+    return $this->text != $this->text_lowercase;
   }
 
   public function isStopWord() {
-    $text = $this->text;
-    return in_array(mb_strtolower($text, 'UTF-8'), self::$stopwords);
+    return isset(self::$stopwords[$this->text_lowercase]);
   }
 
   public function isInitWord() {
-     $text = $this->text;
-     return in_array($text, self::$initwords);
+    return isset(self::$initwords[$this->text_lowercase]);
   }
 
   public function isPrefixOrInfix() {
-    return in_array(mb_strtolower($this->text), self::$prefix_infix);
+    return isset(self::$prefix_infix[$this->text_lowercase]);
   }
 
   public function __toString() {
