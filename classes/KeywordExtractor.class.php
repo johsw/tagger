@@ -23,9 +23,8 @@ class KeywordExtractor {
   }
 
   public function determine_keywords() {
-    $db_conf = $this->tagger->getConfiguration('db');
-    $word_relations_table = $db_conf['word_relations_table'];
-    $lookup_table = $db_conf['lookup_table'];
+    $word_relations_table = $this->options['db']['word_relations_table'];
+    $lookup_table = $this->options['db']['lookup_table'];
 
     $implode_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->words)));
 
@@ -36,24 +35,28 @@ class KeywordExtractor {
       $subjects = array();
 
       while ($row = TaggerQueryManager::fetch($result)) {
-        if (array_key_exists(mb_strtolower($row['word']), $this->words)) {
+        // Words in the database are assumed to be lowercase already
+        if (isset($this->words[$row['word']])) {
           if (!isset($subjects[$row['tid']]['rating'])) { $subjects[$row['tid']]['rating'] = 0; }
           //if(!isset($subjects[$row->tid]['words'])) { $subjects[$row->tid]['words'] = array(); }
-          $subjects[$row['tid']]['rating'] += $row['score'] * $this->words[mb_strtolower($row['word'])];
+          $subjects[$row['tid']]['rating'] += $row['score'] * $this->words[$row['word']];
           //$subjects[$row->tid]['words'][] = array('word' => $row->word, 'rating' => $row->score);
         }
       }
 
-      $constant = $this->constant;
+
       // Normalize scores
-      $normalize = function($s) use ($constant) {
-        $s['rating'] *= $constant;
-        return $s;
-      };
-      $subjects = array_map($normalize, $subjects);
+      if ($this->options['keyword']['normalize']) {
+        $constant = $this->constant;
+        $normalize = function($s) use ($constant) {
+          $s['rating'] *= $constant;
+          return $s;
+        };
+        $subjects = array_map($normalize, $subjects);
+      }
 
       // Threshold
-      $threshold = $this->tagger->getConfiguration('keyword_threshold');
+      $threshold = $this->options['keyword']['threshold'];
       $thresher = function($subject) use ($threshold) {
         return $subject['rating'] > $threshold;
       };
