@@ -44,6 +44,16 @@ class Tagger {
     }
   }
 
+  public function getVocabularyIds() {
+    $sql = sprintf("SELECT vid FROM tagger_lookup GROUP BY vid");
+    $result = TaggerQueryManager::query($sql);
+    $ids = array();
+    while ($row = TaggerQueryManager::fetch($result)) {
+      $ids[$row['vid']] = $row['vid'];
+    }
+    return $ids;
+  }
+
   public function setConfiguration($setting, $value) {
     if (isset($this->configuration[$setting])) {
       $this->configuration[$setting] = $value;
@@ -80,7 +90,7 @@ class Tagger {
    *     ambigous tags.
    *   - 'return_uris': Boolean indicating wheter Tagger should return URI's for
    *     each tag
-   *   - 'log_unmatched': Boolean indicating whether unmatched potential 
+   *   - 'log_unmatched': Boolean indicating whether unmatched potential
    *     NER candidates should be logged
    *   - 'nl2br': Boolean indicating whether newlines should be convertet to br-tags
    * @return
