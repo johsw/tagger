@@ -17,7 +17,7 @@ class Tokenizer {
     }
   }
 
-  public static $split_regex = "/'s|([\s\?,\":\.«»'\(\)\!])/u";
+  public static $split_regex = "/('s|[\s!\?,\.:;'\"«»\(\)]+)/u";
   public static function split_words($text, $capture = false) {
     if ($capture) {
       return preg_split(self::$split_regex, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
