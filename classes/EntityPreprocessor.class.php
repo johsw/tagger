@@ -31,25 +31,16 @@ class EntityPreprocessor {
       if ($token->isUpperCase() && !$token->isStopWord() && !$token->isInitWord()) {
         $entity = array($i => &$this->tokens[$i]);
 
-        // Look two words ahead.
-        if (isset($this->tokens[$i +2])) {
-          $next = $this->tokens[$i +2];
+        // If the next token is not a punctuation break
+        while (!(isset($this->tokens[$i+1]) && preg_match('/[!\?,:;\(\)]/u', $this->tokens[$i+1]->text))
+          && isset($this->tokens[$i+2])
+          && ($this->tokens[$i+2]->isUpperCase() || $this->tokens[$i+2]->isPrefixOrInfix())
+          && $this->tokens[$i+2]->paragraphNumber == $token->paragraphNumber) {
 
-          while (($next->isUpperCase() || $next->isPrefixOrInfix()) && $next->paragraphNumber == $token->paragraphNumber) {
-
-            // Jump two words.
-            $i += 2;
-            $entity[$i] = &$this->tokens[$i];
-            if (isset($this->tokens[$i+2])) {
-              $next = $this->tokens[$i+2];
-            }
-            else {
-              break;
-            }
-          }
+          $entity[$i] = &$this->tokens[$i+2];
+          $i += 2;
         }
         $this->named_entities[] = $entity;
-        unset($next);
         unset($token);
       }
     }
