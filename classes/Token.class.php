@@ -11,16 +11,18 @@ class Token {
 
   public $text;
   public $text_lowercase;
+  public $tokenParts = array();
 
   public $rating = 0;
   public $posRating = 1;
+  public $freqRating = 1;
   public $htmlRating = 0;
 
   public $tokenNumber = NULL;
   public $paragraphNumber = NULL;
 
   public $hasBeenHighlighted = FALSE;
-  public $tokenParts = FALSE;
+
 
   public function __construct($text) {
     $language = Tagger::getConfiguration('language');
@@ -78,12 +80,10 @@ class Token {
     // ATTENTION: this is the rating expression for single tokens!
     $this->rating = (1 + $this->htmlRating * $rating['HTML']) * $this->posRating;
 
-    if($this->tokenParts != NULL) {
-      foreach ($this->tokenParts as $partial_token) {
-        $partial_token->rating = $this->rating;
-        $partial_token->htmlRating = $this->posRating;
-        $partial_token->posRating = $this->htmlRating;
-      }
+    foreach ($this->tokenParts as $partial_token) {
+      $partial_token->rating = $this->rating;
+      $partial_token->htmlRating = $this->posRating;
+      $partial_token->posRating = $this->htmlRating;
     }
   }
 
