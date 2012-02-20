@@ -41,8 +41,15 @@
   );
 
   // Keyword-extraction configuration
+  // A keyword must be related to at least 15 texts for it to be 
+  // processed
+  $tagger_conf['keyword']['minimum_number_of_texts'] = 15;
   $tagger_conf['keyword']['property'] = 'diff_outer_doc_freq';
+  $tagger_conf['keyword']['stemmer'] = FALSE;
   $tagger_conf['keyword']['normalize'] = FALSE;
+  // For a text be given 100% score it must have the equivalent of
+  // one full keyword per 100 words
+  $tagger_conf['keyword']['max_score'] = 1;
   // For a text to be identified with a keyword
   // it must have the equivalent of one full keyword per 250 words
   $tagger_conf['keyword']['threshold'] = 1/250;
@@ -99,11 +106,11 @@
   $tagger_conf['db']['disambiguation_table'] = 'tagger_disambiguation';
   $tagger_conf['db']['unmatched_table'] = 'tagger_unmatched';
 
-
+  $stemmer_postfix = ($tagger_conf['keyword']['stemmer'])? '_stem' : '';
 
   $tagger_conf['db']['docstats_table'] = 'tagger_docstats';
-  $tagger_conf['db']['wordstats_table'] = 'tagger_wordstats';
-  $tagger_conf['db']['word_relations_table'] = 'tagger_word_relations_' . $tagger_conf['keyword']['property'];
+  $tagger_conf['db']['wordstats_table'] = 'tagger_wordstats' . $stemmer_postfix;
+  $tagger_conf['db']['word_relations_table'] = 'tagger_word_relations_' . $tagger_conf['keyword']['property'] . $stemmer_postfix;
 
 
   // Defaults

@@ -14,7 +14,7 @@ class TaggedText {
 
   private $tokenParts;
   private $token;
-  private $tags;
+  private $tags = array();
   private $tokenCount;
   private $paragraphCount;
 
@@ -68,25 +68,29 @@ class TaggedText {
     $this->tokenCount = $preprocessor->tokenCount;
     $this->intermediateHTML = $preprocessor->intermediateHTML;
 
-    // Find words.
+    // Rate the partial tokens
     foreach ($this->partialTokens as $token) {
-      if (!preg_match("/([\s\?,\":\.«»'\(\)\!])/u", $token->text)) {
-        $this->words[] = $token->text;
-      }
+      $token->rateToken($this->tokenCount, $this->paragraphCount, $this->options['named_entity']['rating']);
+    }
+    TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
+
+    // Keyword extraction
+    // - if keyword-vocabs are provided
+    if (count($this->options['keyword_vocab_ids']) > 0) {
+      require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
+      // Deep copy of partialTokens
+      $keyword_extractor = new KeywordExtractor(unserialize(serialize($this->partialTokens)), $this->options);
+      $keyword_extractor->determine_keywords();
+      $this->tags += $keyword_extractor->tags;
     }
 
     // Do NER if NER-vocabs are provided
     if (count($this->options['ner_vocab_ids']) > 0) {
-      // Rate the partial tokens.
-      foreach ($this->partialTokens as $token) {
-        $token->rateToken($this->tokenCount, $this->paragraphCount, $this->options['rating']);
-      }
-      TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
       // Do named entity recognition: find named entities.
       $ner_matcher = new NamedEntityMatcher($this->partialTokens);
       $ner_matcher->match();
-      $this->tags = $ner_matcher->get_matches();
+      $tags = $ner_matcher->get_matches();
 
       // Rate the tags (named entities).
       $rating = $this->options['named_entity']['rating'];
@@ -103,28 +107,19 @@ class TaggedText {
       // Disambiguate
       if ($this->options['disambiguate']) {
         require_once 'classes/Disambiguator.class.php';
-        $disambiguator = new Disambiguator($this->tags, $this->text);
-        $this->tags = $disambiguator->disambiguate();
+        $disambiguator = new Disambiguator($tags, $this->text);
+        $tags = $disambiguator->disambiguate();
       }
       if ($this->options['return_uris']) {
         $this->buildUriData();
       }
+      $this->tags += $tags;
 
       // mark up found tags in HTML
       if ($this->options['highlight']['enable']) {
         $this->highlightTags();
         TaggerLogManager::logDebug("HTML with highlighted tags:\n" . $this->highlightedText);
       }
-    }
-     // Do NER if Keyword-vocabs are provided
-    if (count($this->options['keyword_vocab_ids']) > 0) {
-      // Keyword extraction
-      TaggerLogManager::logDebug("Words:\n" . print_r($this->words, true));
-
-      require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
-      $keyword_extractor = new KeywordExtractor($this->words, $this->options);
-      $keyword_extractor->determine_keywords();
-      $this->tags += $keyword_extractor->tags;
     }
   }
 
@@ -140,7 +135,10 @@ class TaggedText {
 
     $this->highlightedText = '';
 
-    foreach ($this->tags as $category_tags) {
+    $tags = $this->tags;
+    unset($tags[16]);
+
+    foreach ($tags as $category_tags) {
       foreach ($category_tags as $tag) {
         foreach ($tag->tokens as $synonym_tokens) {
           foreach ($synonym_tokens as $token) {
