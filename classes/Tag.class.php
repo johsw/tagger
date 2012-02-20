@@ -24,8 +24,12 @@ class Tag extends Token {
       parent::__construct($token);
     }
     elseif (is_a($token, 'Token')) {
-      $this->text = $token->text;
+      parent::__construct($token->text);
     }
+    else {
+      parent::__construct('');
+    }
+
     if($this->text != '') {
       $this->synonyms[] = $this->text;
     }
@@ -61,6 +65,12 @@ class Tag extends Token {
     $this->rating /= 1 + (($this->freqRating - 1) * (1 - $freq_rating));
   }
 
+  public function __toString() {
+    $str =  "Tag: $this->realName\n";
+    $str .= "Synonyms: " . implode(', ', $this->synonyms) . "\n";
+    $str .= "Rating: $this->rating (freq: $this->freqRating, pos: $this->posRating, html: $this->htmlRating)\n";
+    return $str;
+  }
 
   public static function mergeTokens($tokens) {
     $tags = array();
