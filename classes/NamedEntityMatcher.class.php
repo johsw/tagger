@@ -19,7 +19,7 @@ class NamedEntityMatcher extends Matcher {
     $potential_entities = $this->flattenTokens($potential_entities);
     TaggerLogManager::logDebug("Found potential entities:\n" . print_r($potential_entities, TRUE));
 
-    $potential_entities = $this->mergeTokens($potential_entities);
+    $potential_entities = Tag::mergeTokens($potential_entities);
     TaggerLogManager::logDebug("Merged:\n" . print_r($potential_entities, TRUE));
 
     parent::__construct($potential_entities);
@@ -71,25 +71,6 @@ class NamedEntityMatcher extends Matcher {
       $flattened_tokens[] = $token;
     }
     return $flattened_tokens;
-  }
-
-  private function mergeTokens($tokens) {
-    $tags = array();
-
-    for ($i = 0, $n = count($tokens)-1; $i <= $n; $i++) {
-      if (isset($tokens[$i])) {
-        $tag = new Tag($tokens[$i]);
-        for ($j = $i; $j <= $n; $j++) {
-          if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
-            $tag->tokens[$tag->text][] = &$tokens[$j];
-            unset($tokens[$j]);
-          }
-        }
-        $tags[] = $tag;
-      }
-    }
-
-    return $tags;
   }
 
 }

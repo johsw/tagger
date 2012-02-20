@@ -61,6 +61,26 @@ class Tag extends Token {
     $this->rating /= 1 + (($this->freqRating - 1) * (1 - $freq_rating));
   }
 
+
+  public static function mergeTokens($tokens) {
+    $tags = array();
+
+    for ($i = 0, $n = count($tokens)-1; $i <= $n; $i++) {
+      if (isset($tokens[$i])) {
+        $tag = new Tag($tokens[$i]);
+        for ($j = $i; $j <= $n; $j++) {
+          if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
+            $tag->tokens[$tag->text][] = &$tokens[$j];
+            unset($tokens[$j]);
+          }
+        }
+        $tags[] = $tag;
+      }
+    }
+
+    return $tags;
+  }
+
 }
 
 
