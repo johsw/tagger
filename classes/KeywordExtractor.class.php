@@ -8,9 +8,8 @@ class KeywordExtractor {
   public $tags;
 
   private $constant;
-  private $options;
 
-  function __construct($words, $options) {
+  function __construct($tokens) {
     $this->tagger = Tagger::getTagger();
 
     $this->tags = array();
@@ -23,8 +22,8 @@ class KeywordExtractor {
   }
 
   public function determine_keywords() {
-    $word_relations_table = $this->options['db']['word_relations_table'];
-    $lookup_table = $this->options['db']['lookup_table'];
+    $word_relations_table = Tagger::getConfiguration('db', 'word_relations_table');
+    $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
 
     $implode_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->words)));
 
@@ -67,8 +66,8 @@ class KeywordExtractor {
 
       if (!empty($subjects)) {
         $implode_subjects_ids = implode(',', array_map('mysql_real_escape_string', array_keys($subjects)));
-        $vocab_ids = implode(',', $this->options['keyword_vocab_ids']);
-        
+        $vocab_ids = implode(',', Tagger::getConfiguration('keyword', 'vocab_ids'));
+
         $query = "SELECT tid, vid, name FROM $lookup_table WHERE tid IN ($implode_subjects_ids) AND vid IN ($vocab_ids)";
         $result = TaggerQueryManager::query($query);
         while ($row = TaggerQueryManager::fetch($result)) {

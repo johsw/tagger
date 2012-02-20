@@ -17,6 +17,8 @@ class Tag extends Token {
   public $posRating = 0;
   public $freqRating = 0;
 
+  public $type = 'named_entity'; // keyword, named_entity
+
   public function __construct($token) {
     if (is_string($token)) {
       parent::__construct($token);
@@ -45,7 +47,7 @@ class Tag extends Token {
     return $ret_tag;
   }
 
-  public function rateTag($rating) {
+  public function rate() {
     foreach ($this->tokens as $synonym_tokens) {
       foreach ($synonym_tokens as $token) {
         $this->freqRating++;
@@ -55,7 +57,7 @@ class Tag extends Token {
       }
     }
 
-    $freq_rating = $rating['frequency'];
+    $freq_rating = Tagger::getConfiguration($this->type, 'rating', 'frequency');
     $this->rating /= 1 + (($this->freqRating - 1) * (1 - $freq_rating));
   }
 

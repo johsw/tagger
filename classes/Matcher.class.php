@@ -9,22 +9,19 @@ abstract class Matcher {
   protected $tokens;
   protected $vocabularies;
   protected $nonmatches;
-  protected $tagger;
 
-  function __construct($tokens, $vocab_id_array) {
-    $this->tagger = Tagger::getTagger();
+  function __construct($tokens) {
 
     foreach($tokens as $token) {
       $this->tokens[mb_strtolower($token->text)] = $token;
     }
     $this->matches = array();
     $this->nonmatches = array();
-    $this->vocabularies = implode(', ', $vocab_id_array);
+    $this->vocabularies = implode(', ', Tagger::getConfiguration('ner_vocab_ids'));
   }
 
   protected function term_query() {
-    $db_conf = $this->tagger->getConfiguration('db');
-    $lookup_table = $db_conf['lookup_table'];
+    $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
 
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
       $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->tokens)));

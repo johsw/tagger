@@ -54,7 +54,7 @@ class TaggedText {
     TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
     // Tokenize - with/without HTML.
-    if ($this->options['rating']['HTML'] !== 0) {
+    if ($this->options['named_entity']['rating']['HTML'] !== 0) {
       require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
       $preprocessor = new HTMLPreprocessor($this->text, $this->options);
     }
@@ -84,16 +84,14 @@ class TaggedText {
       TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
       // Do named entity recognition: find named entities.
-      $ner_matcher = new NamedEntityMatcher($this->partialTokens, $this->options['ner_vocab_ids']);
+      $ner_matcher = new NamedEntityMatcher($this->partialTokens);
       $ner_matcher->match();
       $this->tags = $ner_matcher->get_matches();
 
       // Rate the tags (named entities).
-      $rating = $this->options['rating'];
-      $tag_rate_closure = function($tag) use ($rating) {
-        $tag->rateTag($rating);
-      };
-      array_walk_recursive($this->tags, $tag_rate_closure);
+      $rating = $this->options['named_entity']['rating'];
+      //array_walk_recursive($tags, call_user_func(array('Tag', 'rate'), $rating));
+      array_walk_recursive($tags, create_function('$tag', '$tag->rate();'));
 
 
       // Capture unmatched tags

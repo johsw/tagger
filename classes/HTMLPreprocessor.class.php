@@ -15,10 +15,9 @@ class HTMLPreprocessor {
 
   public $tokens;
 
-  public function __construct($text, $options) {
+  public function __construct($text) {
     $this->tagger = Tagger::getTagger();
 
-    $this->options = $options;
 
     $this->html = '<?xml encoding="UTF-8">' .  $text;
 
@@ -46,7 +45,7 @@ class HTMLPreprocessor {
    */
   public function rateElement($element, $cur_rating, $body_reached = FALSE) {
     // build intermediateHTML
-    if ($this->options['highlight']['enable']) {
+    if (Tagger::getConfiguration('highlight', 'enable')) {
       if ($body_reached) {
         $this->makeHTMLbeginTag($element);
       }
@@ -56,7 +55,7 @@ class HTMLPreprocessor {
     }
 
     // check if were in a new paragraph
-    if (in_array($element->nodeName, $this->options['HTML']['paragraph_separators']) && trim($element->textContent) != '') {
+    if (in_array($element->nodeName, Tagger::getConfiguration('HTML', 'paragraph_separators')) && trim($element->textContent) != '') {
       $this->paragraphCount++;
     }
 
@@ -70,7 +69,7 @@ class HTMLPreprocessor {
         $token->tokenNumber = $this->tokenCount;
         $this->tokens[] = $token;
 
-        if ($this->options['highlight']['enable']) {
+        if (Tagger::getConfiguration('highlight', 'enable')) {
           $this->intermediateHTML[] = &$this->tokens[count($this->tokens)-1];
         }
       }
@@ -79,8 +78,9 @@ class HTMLPreprocessor {
     // recursively rate children
     if ($element->hasChildNodes()) {
       foreach ($element->childNodes as $child) {
-        if (array_key_exists($child->nodeName, $this->options['HTML']['tags'])) {
-          $this->rateElement($child, $cur_rating + $this->options['HTML']['tags'][$child->nodeName], $body_reached);
+        if (array_key_exists($child->nodeName, Tagger::getConfiguration('HTML', 'tags'))) {
+          $tagRatings = Tagger::getConfiguration('HTML', 'tags');
+          $this->rateElement($child, $cur_rating + $tagRatings[$child->nodeName], $body_reached);
         }
         else {
           $this->rateElement($child, $cur_rating, $body_reached);
@@ -89,7 +89,7 @@ class HTMLPreprocessor {
     }
 
     // build intermediateHTML
-    if ($this->options['highlight']['enable']) {
+    if (Tagger::getConfiguration('highlight', 'enable')) {
       if ($body_reached && $element->nodeName != 'body') {
         $this->makeHTMLendTag($element);
       }

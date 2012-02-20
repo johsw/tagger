@@ -21,8 +21,8 @@
     6 => 'NYT search api'
     );
 
-  
-  $tagger_conf['rating'] = array(
+
+  $tagger_conf['named_entity']['rating'] = array(
     // Settings for ratings of Named Entities
     // These should be numbers between 0 and 1
     // 0: turned off
@@ -46,6 +46,8 @@
   // For a text to be identified with a keyword
   // it must have the equivalent of one full keyword per 250 words
   $tagger_conf['keyword']['threshold'] = 1/250;
+
+  $tagger_conf['keyword']['debug'] = FALSE;
 
   // Disambiguation
   $tagger_conf['disambiguate'] = TRUE;

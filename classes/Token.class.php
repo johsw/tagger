@@ -23,8 +23,7 @@ class Token {
   public $tokenParts = FALSE;
 
   public function __construct($text) {
-    $tagger = Tagger::getTagger();
-    $language = $tagger->getConfiguration('language');
+    $language = Tagger::getConfiguration('language');
 
     $this->text = $text;
     $this->text_lowercase = mb_strtolower($this->text, 'UTF-8');
@@ -62,7 +61,8 @@ class Token {
     return $this->text;
   }
 
-  public function rateToken($token_count, $paragraph_count, $rating) {
+  public function rateToken($token_count, $paragraph_count) {
+    $rating = Tagger::getConfiguration('named_entity', 'rating');
     $min_pos_rating = (1 - $rating['positional_minimum']) * exp(-$token_count/$rating['positional_critical_token_count']) + $rating['positional_minimum'];
     $a = log(1 - (1 - $min_pos_rating) * $rating['positional']);
 

@@ -13,17 +13,16 @@ class PlainTextPreprocessor {
 
   public $tokens;
 
-  public function __construct($text, $options) {
+  public function __construct($text) {
     $this->tagger = Tagger::getTagger();
 
-    if ($options['br2nl']) {
+    if (Tagger::getConfiguration('br2nl')) {
       $text = strtr($text, "\r", '');
       $text = strtr($text, "\n", '');
       $text = $this->br2nl($text);
     }
     $this->text = trim($text);
 
-    $this->options = $options;
   }
 
 
@@ -52,7 +51,7 @@ class PlainTextPreprocessor {
 
     }
 
-    if ($this->options['highlight']['enable']) {
+    if (Tagger::getConfiguration('highlight', 'enable')) {
       $this->intermediateHTML = &$this->tokens;
     }
   }

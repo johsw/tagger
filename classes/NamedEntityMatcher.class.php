@@ -9,8 +9,7 @@ class NamedEntityMatcher extends Matcher {
 
   private $partialTokens;
 
-  function __construct($partial_tokens, $ner_vocabs) {
-    $this->tagger = Tagger::getTagger();
+  function __construct($partial_tokens) {
 
     $this->partialTokens = $partial_tokens;
 
@@ -23,7 +22,7 @@ class NamedEntityMatcher extends Matcher {
     $potential_entities = $this->mergeTokens($potential_entities);
     TaggerLogManager::logDebug("Merged:\n" . print_r($potential_entities, TRUE));
 
-    parent::__construct($potential_entities, $ner_vocabs);
+    parent::__construct($potential_entities);
   }
 
   public function match() {

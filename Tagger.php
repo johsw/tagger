@@ -7,9 +7,9 @@ class Tagger {
 
   private static $instance;
 
-  private $conf_settings;
+  private static $conf_settings;
 
-  private $configuration;
+  private static $configuration;
 
 
   private function __construct($configuration = array())  {
@@ -20,7 +20,7 @@ class Tagger {
     if (!isset($configuration) || empty($configuration)) {
       include 'conf.php';
     }
-    $this->configuration = $tagger_conf;
+    self::$configuration = $tagger_conf;
 
   }
 
@@ -32,26 +32,56 @@ class Tagger {
     return self::$instance;
   }
 
-  public function getConfiguration($setting = NULL) {
-    if ($setting === NULL) {
-      return $this->configuration;
-    }
-    else if (isset($this->configuration[$setting])) {
-      return $this->configuration[$setting];
+  // getConfiguration('keyword', 'stemmer') ==
+  //   $this->configuration['keyword']['stemmer']
+  public static function getConfiguration() {
+    $arg_count = func_num_args();
+    if ($arg_count = 0) {
+      return self::$configuration;
     }
     else {
-      return FALSE;
+      $opt = self::$configuration;
+      $setting_str = '$configuration';
+      foreach(func_get_args() as $arg) {
+        $setting_str .= "['$arg']";
+        if (isset($opt[$arg])) {
+          $opt = $opt[$arg];
+        }
+        else {
+          throw new ErrorException('Setting ' . $setting_str . ' not found in configuration.');
+          //return FALSE;
+        }
+      }
+      return $opt;
     }
   }
 
-  public function setConfiguration($setting, $value) {
-    if (isset($this->configuration[$setting])) {
-      $this->configuration[$setting] = $value;
-      return $this->configuration[$setting];
+  public static function setConfiguration() {
+    $arg_count = func_num_args();
+    $args = func_get_args();
+    if (is_array($args[0])) {
+      $tagger_conf = array_merge(self::$configuration, $args[0]);
+      self::$configuration = $tagger_conf;
+      return $tagger_conf;
     }
-    else {
-      throw new ErrorException('Setting ' . $setting . ' not found in configuration.');
+    if ($arg_count < 2) {
+      throw new ErrorException('Need at least two arguments.');
     }
+    $opt =& self::$configuration;
+    $l = array_slice(func_get_args(), 1);
+    print_r($l);
+    $setting_str = '$configuration';
+    foreach($l as $arg) {
+      $setting_str .= "['$arg']";
+      if (is_array($opt) && isset($opt[$arg])) {
+        $opt =& $opt[$arg];
+      }
+      else {
+        throw new ErrorException('Setting ' . $setting_str . ' not found in configuration.');
+      }
+    }
+    $opt = func_get_arg(0);
+    return $opt;
   }
 
   // Prevent users to clone the instance
@@ -93,7 +123,7 @@ class Tagger {
     }
 
     // let $options array override $configuration (i.e. conf.php and defaults.php)
-    foreach($this->configuration as $key => $value) {
+    foreach(self::$configuration as $key => $value) {
       if (!isset($options[$key])) {
         $options[$key] = $value;
       }
@@ -105,7 +135,7 @@ class Tagger {
             continue;
           }
           else {
-            $options[$key] = array_merge_recursive_simple($this->configuration[$key], $options[$key]);
+            $options[$key] = array_merge_recursive_simple(self::$configuration[$key], $options[$key]);
           }
         }
       }
