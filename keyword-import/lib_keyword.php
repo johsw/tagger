@@ -97,18 +97,6 @@
         unset($keywords[$tid]);
       }
 
-
-      // Create the table if it doesn't exist
-      TaggerQueryManager::query("
-        CREATE TABLE IF NOT EXISTS `$word_relations_table` (
-          `word` varchar(255) NOT NULL,
-          `tid` varchar(255) NOT NULL,
-          `score` decimal(30,20) unsigned NOT NULL,
-          `pass` bigint(20) unsigned NOT NULL,
-          KEY (`word`),
-          KEY (`tid`)
-        )  DEFAULT CHARSET=utf8;
-        ");
     }
 
     if ($error) {
@@ -401,17 +389,6 @@
   function init_wordstats_table() {
     global $wordstats_table;
 
-    TaggerQueryManager::query("TRUNCATE TABLE `$wordstats_table`;");
-    TaggerQueryManager::query("
-      CREATE TABLE IF NOT EXISTS `$wordstats_table` (
-        `word` varchar(255) NOT NULL,
-        `word_count` bigint(20) unsigned NOT NULL,
-        `doc_count` bigint(20) unsigned NOT NULL,
-        `word_freq` decimal(30,20) unsigned NOT NULL,
-        `doc_freq` decimal(30,20) unsigned NOT NULL,
-        PRIMARY KEY (`word`)
-      )  DEFAULT CHARSET=utf8;
-    ");
 
   }
 
@@ -455,16 +432,7 @@
   function create_docstats_table($doc_count, $word_count) {
     global $docstats_table;
 
-    TaggerQueryManager::query("
-      CREATE TABLE IF NOT EXISTS `$docstats_table` (
-        `word_count` bigint(20) unsigned NOT NULL,
-        `doc_count` bigint(20) unsigned NOT NULL
-      )
-    ");
-    TaggerQueryManager::query("TRUNCATE TABLE `$docstats_table`;");
-
     TaggerQueryManager::query("INSERT INTO `$docstats_table` (doc_count,word_count) VALUES ($doc_count,$word_count);");
-
   }
 
   // Calculate word scores in text

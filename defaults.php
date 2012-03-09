@@ -101,7 +101,6 @@
 
   // Database table names
   $tagger_conf['db']['lookup_table'] = 'tagger_lookup';
-  $tagger_conf['db']['unmatched_table'] = 'tagger_unmatched_terms';
   $tagger_conf['db']['linked_data_table'] = 'tagger_linked_data_sources';
   $tagger_conf['db']['disambiguation_table'] = 'tagger_disambiguation';
   $tagger_conf['db']['unmatched_table'] = 'tagger_unmatched';
