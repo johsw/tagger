@@ -15,9 +15,10 @@ class NamedEntityMatcher extends Matcher {
 
     $entityPreprocessor = new EntityPreprocessor(&$this->partialTokens);
     $potential_entities = $entityPreprocessor->get_potential_named_entities();
+    TaggerLogManager::logDebug("Found potential entities:\n" . print_r($potential_entities, TRUE));
 
     $potential_entities = $this->flattenTokens($potential_entities);
-    TaggerLogManager::logDebug("Found potential entities:\n" . print_r($potential_entities, TRUE));
+    TaggerLogManager::logDebug("Flattened:\n" . print_r($potential_entities, TRUE));
 
     $potential_entities = Tag::mergeTokens($potential_entities);
     TaggerLogManager::logDebug("Merged:\n" . print_r($potential_entities, TRUE));

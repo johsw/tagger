@@ -7,6 +7,7 @@ class Tokenizer {
   public $tokens;
 
   public function __construct($text, $capture = false) {
+
     $text = str_replace("\n", " __newline__ ", $text);
     $text = str_replace("\r", " __newline__ ", $text);
     $this->words = $this->split_words($text, $capture);
