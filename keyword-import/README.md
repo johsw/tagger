@@ -12,8 +12,8 @@ into a Tagger keyword-database.
 
 ***Import from Information-MySQL***
 
-1. Run `inf_create_wordstats()` (defined in _lib\information.php_)
-2. Run `inf_create_keywords()` (defined in _lib\information.php_)
+1. Run `inf_create_wordstats()` (defined in _lib\_information.php_)
+2. Run `inf_create_keywords()` (defined in _lib\_information.php_)
 
 ---
 _keyword-texts.json_ must be valid [JSON], encoded in `UTF-8` and be on the form:
