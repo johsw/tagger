@@ -10,11 +10,6 @@ into a Tagger keyword-database.
 2. Run `json_create_wordstats()` (defined in _lib\_keyword.php_)
 3. Run `json_create_keywords()` (defined in _lib\_keyword.php_)
 
-***Import from Information-MySQL***
-
-1. Run `inf_create_wordstats()` (defined in _lib\information.php_)
-2. Run `inf_create_keywords()` (defined in _lib\information.php_)
-
 ---
 _keyword-texts.json_ must be valid [JSON], encoded in `UTF-8` and be on the form:
 
