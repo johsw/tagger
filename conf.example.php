@@ -47,8 +47,13 @@
   $tagger_conf['keyword']['normalize'] = false;
 
   // Database table names
+  $tagger_conf['db']['lookup_table'] = 'tagger_lookup';
+  $tagger_conf['db']['linked_data_table'] = 'tagger_linked_data_sources';
+  $tagger_conf['db']['disambiguation_table'] = 'tagger_disambiguation';
+  $tagger_conf['db']['unmatched_table'] = 'tagger_unmatched';
+
+  $stemmer_postfix = ($tagger_conf['keyword']['stemmer'])? '_stem' : '';
+
   $tagger_conf['db']['docstats_table'] = 'tagger_docstats';
-
-  $tagger_conf['db']['word_relations_table'] = 'tagger_word_relations_' . $tagger_conf['keyword']['property'];
-
-
+  $tagger_conf['db']['wordstats_table'] = 'tagger_wordstats' . $stemmer_postfix;
+  $tagger_conf['db']['word_relations_table'] = 'tagger_word_relations_' . $tagger_conf['keyword']['property'] . $stemmer_postfix;
