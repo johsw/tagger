@@ -14,7 +14,7 @@ class TaggerInstaller {
   private function install($tagger) {
     $linked_data_table = $tagger->getConfiguration('db', 'linked_data_table');
     TaggerQueryManager::query("
-    CREATE TABLE `$linked_data_table` (
+    CREATE TABLE IF NOT EXISTS `$linked_data_table` (
       `dsid` int(11) unsigned NOT NULL AUTO_INCREMENT,
       `dstid` int(11) unsigned NOT NULL,
       `tid` int(11) unsigned NOT NULL,
@@ -30,7 +30,7 @@ class TaggerInstaller {
 
     $unmatched_table = $tagger->getConfiguration('db', 'unmatched_table');
     TaggerQueryManager::query("
-    CREATE TABLE `$unmatched_table` (
+    CREATE TABLE IF NOT EXISTS `$unmatched_table` (
       `name` varchar(255) NOT NULL,
       `count` int(11) NOT NULL,
       `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,7 +41,7 @@ class TaggerInstaller {
 
     $disambiguation_table = $tagger->getConfiguration('db', 'disambiguation_table');
     TaggerQueryManager::query("
-    CREATE TABLE `$disambiguation_table` (
+    CREATE TABLE IF NOT EXISTS `$disambiguation_table` (
       `tid` int(11) unsigned NOT NULL,
       `name` varchar(255) NOT NULL DEFAULT ''
     ) DEFAULT CHARSET=utf8;
@@ -49,7 +49,7 @@ class TaggerInstaller {
 
     $lookup_table = $tagger->getConfiguration('db', 'lookup_table');
     TaggerQueryManager::query("
-    CREATE TABLE `$lookup_table` (
+    CREATE TABLE IF NOT EXISTS `$lookup_table` (
       `tid` int(11) unsigned NOT NULL,
       `vid` int(10) unsigned NOT NULL,
       `name` varchar(255) NOT NULL DEFAULT '',
