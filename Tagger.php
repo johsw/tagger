@@ -1,5 +1,6 @@
 <?php
 define('__ROOT__', dirname(__FILE__) . '/');
+define('TAGGER_VERSION', 4);
 mb_internal_encoding('UTF-8');
 require_once __ROOT__ . 'classes/TaggedText.class.php';
 
@@ -10,7 +11,6 @@ class Tagger {
   private static $conf_settings;
 
   private static $configuration;
-
 
   private function __construct($configuration = array())  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
@@ -24,6 +24,10 @@ class Tagger {
 
   }
 
+  public function getTaggerVersion() {
+    return TAGGER_VERSION;
+  }
+
   public static function getTagger($configuration = array()) {
     if (!isset(self::$instance)) {
         $c = __CLASS__;
@@ -32,8 +36,7 @@ class Tagger {
     return self::$instance;
   }
 
-  // getConfiguration('keyword', 'stemmer') ==
-  //   $this->configuration['keyword']['stemmer']
+
   public static function getConfiguration() {
     $arg_count = func_num_args();
     if ($arg_count = 0) {
@@ -46,10 +49,8 @@ class Tagger {
         $setting_str .= "['$arg']";
         if (isset($opt[$arg])) {
           $opt = $opt[$arg];
-        }
-        else {
+        } else {
           throw new ErrorException('Setting ' . $setting_str . ' not found in configuration.');
-          //return FALSE;
         }
       }
       return $opt;
@@ -69,14 +70,12 @@ class Tagger {
     }
     $opt =& self::$configuration;
     $l = array_slice(func_get_args(), 1);
-    print_r($l);
     $setting_str = '$configuration';
     foreach($l as $arg) {
       $setting_str .= "['$arg']";
       if (is_array($opt) && isset($opt[$arg])) {
         $opt =& $opt[$arg];
-      }
-      else {
+      } else {
         throw new ErrorException('Setting ' . $setting_str . ' not found in configuration.');
       }
     }
