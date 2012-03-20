@@ -117,7 +117,7 @@ class Tagger {
    *   An HTML string containing a link to the given path.
    */
 
-  public function tagText($text, $options) {
+  public function tagText($text, $options = array()) {
     if (empty($options)) {
       $options = array();
     }
