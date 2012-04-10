@@ -13,7 +13,7 @@ class NamedEntityMatcher extends Matcher {
 
     $this->partialTokens = $partial_tokens;
 
-    $entityPreprocessor = new EntityPreprocessor(&$this->partialTokens);
+    $entityPreprocessor = new EntityPreprocessor($this->partialTokens);
     $potential_entities = $entityPreprocessor->get_potential_named_entities();
     TaggerLogManager::logDebug("Found potential entities:\n" . print_r($potential_entities, TRUE));
 
