@@ -128,7 +128,6 @@ class Tagger {
         $options[$key] = $value;
       }
       else {
-        
         if(is_array($options[$key])) {
           if ($key == 'ner_vocab_ids' || $key == 'keyword_vocab_ids') {
             // we allow empty arrays here because that is how
