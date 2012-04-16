@@ -81,7 +81,9 @@ class TaggedText {
       // Deep copy of partialTokens
       $keyword_extractor = new KeywordExtractor(unserialize(serialize($this->partialTokens)), $this->options);
       $keyword_extractor->determine_keywords();
-      $this->tags += $keyword_extractor->tags;
+      if (isset($keyword_extractor->tags) && !empty($keyword_extractor->tags)) {
+        $this->tags += $keyword_extractor->tags;
+      }
     }
 
     // Do NER if NER-vocabs are provided

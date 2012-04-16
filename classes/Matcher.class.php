@@ -24,7 +24,7 @@ abstract class Matcher {
     $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
 
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
-      $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($this->tokens)));
+      $imploded_words = implode("','", array_map('mysql_escape_string', array_keys($this->tokens)));
       $unmatched = $this->tokens;
 
       // First we find synonyms
@@ -38,7 +38,7 @@ abstract class Matcher {
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
       $synonym_ids_imploded = implode("','", array_keys($synonyms));
-      $imploded_words = implode("','", array_map('mysql_real_escape_string', array_keys($unmatched)));
+      $imploded_words = implode("','", array_map('mysql_escape_string', array_keys($unmatched)));
 
       // Then we find the actual names of entities
       $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM $lookup_table WHERE vid IN($this->vocabularies) AND tid IN('$synonym_ids_imploded') AND canonical = 1 GROUP BY name";
