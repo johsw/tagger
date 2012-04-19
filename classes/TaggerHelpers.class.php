@@ -27,7 +27,7 @@ class TaggerHelpers {
       foreach ($array as $key => $value) {
         if (is_string($key)) {
           if (is_array($value) && array_key_exists($key, $merged) && is_array($merged[$key])) {
-            $merged[$key] = call_user_func(__FUNCTION__, $merged[$key], $value);
+            $merged[$key] = call_user_func(array(__CLASS__, __FUNCTION__), $merged[$key], $value);
           } else {
             $merged[$key] = $value;
           }
