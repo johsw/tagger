@@ -6,15 +6,13 @@ require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
 abstract class Matcher {
   protected $matches;
   protected $numresults = 0;
-  protected $tokens;
+  private $tokens;
   protected $vocabularies;
   protected $nonmatches;
 
   function __construct($tokens) {
+    $this->setTokens($tokens);
 
-    foreach($tokens as $token) {
-      $this->tokens[mb_strtolower($token->text)] = $token;
-    }
     $this->matches = array();
     $this->nonmatches = array();
     $this->vocabularies = implode(', ', Tagger::getConfiguration('ner_vocab_ids'));
@@ -38,7 +36,6 @@ abstract class Matcher {
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
       $synonym_ids_imploded = implode("','", array_keys($synonyms));
-      $imploded_words = implode("','", array_map('mysql_escape_string', array_keys($unmatched)));
 
       // Then we find the actual names of entities
       $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM $lookup_table WHERE vid IN($this->vocabularies) AND tid IN('$synonym_ids_imploded') AND canonical = 1 GROUP BY name";
@@ -91,4 +88,17 @@ abstract class Matcher {
     return $this->nonmatches;
   }
   abstract protected function match();
+
+  protected function setTokens($tokens) {
+    foreach($tokens as $token) {
+      $this->tokens[mb_strtolower($token->text)] = $token;
+    }
+  }
+
+  public function __set($name, $value) {
+    if($name == 'tokens') {
+      throw new Exception('Cannot set $tokens, use setTokens() instead.', 1);
+    }
+  }
+
 }

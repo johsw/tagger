@@ -37,10 +37,10 @@ class NamedEntityMatcher extends Matcher {
 
     // We do a new search for the possibly unmatched genitives.
     if (!empty($possible_genitives)) {
-      $this->tokens = array();
-      foreach ($possible_genitives as $ends_with_s) {
-        $this->tokens[mb_strtolower(rtrim($ends_with_s, 's'))] = $ends_with_s;
+      foreach ($possible_genitives as &$ends_with_s) {
+        $ends_with_s->text = mb_strtolower(rtrim($ends_with_s->text, 's'));
       }
+      $this->setTokens($possible_genitives);
       $this->term_query();
     }
 
