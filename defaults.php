@@ -45,7 +45,7 @@
   // processed
   $tagger_conf['keyword']['minimum_number_of_texts'] = 15;
   $tagger_conf['keyword']['property'] = 'diff_outer_doc_freq';
-  $tagger_conf['keyword']['stemmer'] = FALSE;
+  $tagger_conf['keyword']['enable_stemmer'] = FALSE;
   $tagger_conf['keyword']['normalize'] = FALSE;
   // For a text be given 100% score it must have the equivalent of
   // one full keyword per 100 words
@@ -105,7 +105,7 @@
   $tagger_conf['db']['disambiguation_table'] = 'tagger_disambiguation';
   $tagger_conf['db']['unmatched_table'] = 'tagger_unmatched';
 
-  $stemmer_postfix = ($tagger_conf['keyword']['stemmer'])? '_stem' : '';
+  $stemmer_postfix = ($tagger_conf['keyword']['enable_stemmer'])? '_stem' : '';
 
   $tagger_conf['db']['docstats_table'] = 'tagger_docstats';
   $tagger_conf['db']['wordstats_table'] = 'tagger_wordstats' . $stemmer_postfix;

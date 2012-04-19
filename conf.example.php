@@ -52,7 +52,7 @@
   $tagger_conf['db']['disambiguation_table'] = 'tagger_disambiguation';
   $tagger_conf['db']['unmatched_table'] = 'tagger_unmatched';
 
-  $stemmer_postfix = ($tagger_conf['keyword']['stemmer'])? '_stem' : '';
+  $stemmer_postfix = ($tagger_conf['keyword']['enable_stemmer'])? '_stem' : '';
 
   $tagger_conf['db']['docstats_table'] = 'tagger_docstats';
   $tagger_conf['db']['wordstats_table'] = 'tagger_wordstats' . $stemmer_postfix;
