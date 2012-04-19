@@ -13,13 +13,18 @@ class Tagger {
 
   private static $configuration;
 
-  private function __construct($configuration = array())  {
+  private function __construct($configuration = array(), $file = 'conf.php')  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
     define('TAGGER_DIR', dirname(__FILE__));
     include 'defaults.php';
     $tagger_conf = array_merge($tagger_conf, $configuration);
     if (!isset($configuration) || empty($configuration)) {
-      include 'conf.php';
+      if(file_exists(__ROOT__ . $file)) {
+        include $file;
+      }
+      else {
+        throw new Exception("Configuration file '$file' not found.", 1);
+      }
     }
     self::$configuration = $tagger_conf;
 
@@ -29,16 +34,18 @@ class Tagger {
     return TAGGER_VERSION;
   }
 
-  public static function getTagger($configuration = array()) {
+  public static function getTagger($configuration = array(), $file = 'conf.php') {
     if (!isset(self::$instance)) {
         $c = __CLASS__;
-        self::$instance = new $c($configuration);
+        self::$instance = new $c($configuration, $file);
     }
     return self::$instance;
   }
 
 
   public static function getConfiguration() {
+    self::getTagger();
+
     $arg_count = func_num_args();
     if ($arg_count = 0) {
       return self::$configuration;
@@ -114,7 +121,7 @@ class Tagger {
    *     NER candidates should be logged
    *   - 'nl2br': Boolean indicating whether newlines should be convertet to br-tags
    * @return
-   *   An HTML string containing a link to the given path.
+   *   TaggedText object
    */
 
   public function tagText($text, $options = array()) {
