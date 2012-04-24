@@ -32,8 +32,20 @@ class TaggerQueryHandler {
     $this->link = NULL;
   }
 
-  public function fetch($result, $type = 'assoc') {
-    return $result->fetch(PDO::FETCH_ASSOC);
+  public function fetch($result, $type) {
+    switch (strtolower($type)) {
+      case 'num':
+        return $result->fetch(PDO::FETCH_NUM);
+        break;
+
+      case 'assoc':
+        return $result->fetch(PDO::FETCH_ASSOC);
+        break;
+      
+      default:
+        return $result->fetch(PDO::FETCH_ASSOC);
+        break;
+    }
   }
 
   public function query($sql, $args) {
@@ -56,4 +68,50 @@ class TaggerQueryHandler {
       die('Database error: '. $error_msg[2] . "\n" . 'Query: ' . $sql);
     }
   }
+
+  public static function quote($str) {
+    if (!isset(self::$instance)) {
+      $c = __CLASS__;
+      self::$instance = new $c;
+    }
+
+    if (($result = self::$instance->link->quote($str)) === FALSE) {
+      throw new Exception('Current database driver does not support quoting.');
+    }
+    return $result;
+  }
+
+  public static function bufferedInsert($table, $fields, $values_array, $num) {
+    array_walk($fields, array('self', 'quote'));
+    $fields_str = join(',', $fields);
+
+    self::$instance->link->beginTransaction();
+
+    $qmarks_fields = str_repeat("?,", count($fields)-1) . "?";
+    $st = self::$instance->link->prepare("INSERT INTO `$table` ($fields_str) VALUES ($qmarks_fields)");
+
+    $insert_count = 0;
+    foreach($values_array as $values) {
+
+      if (FALSE === $st->execute($values)) {
+        $error_info = $st->errorInfo();
+        throw new Exception('Insert failed: ' . $error_info[2]);
+      }
+      
+      $insert_count++;
+      if ($insert_count == $num) {
+        $commit_bool = self::$instance->link->commit();
+        if ($commit_bool === FALSE) {
+          throw new Exception('Insert failed: ' . self::$instance->link->errorInfo());
+        }
+        self::$instance->link->beginTransaction();
+      }
+    }
+
+    $commit_bool = self::$instance->link->commit();
+    if ($commit_bool === FALSE) {
+      throw new Exception('Insert failed: ' . self::$instance->link->errorInfo());
+    }
+  }
+
 }
