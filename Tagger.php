@@ -13,6 +13,10 @@ class Tagger {
 
   private static $configuration;
 
+  public static $initwords;
+  public static $prefix_infix;
+  public static $stopwords;
+
   private function __construct($configuration = array(), $file = 'conf.php')  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
     define('TAGGER_DIR', dirname(__FILE__));
@@ -27,6 +31,16 @@ class Tagger {
       }
     }
     self::$configuration = $tagger_conf;
+
+
+    $wordlists = array('initwords', 'prefix_infix', 'stopwords');
+    foreach ($wordlists AS $wordlist) {
+      if (self::$$wordlist == NULL) {
+        $path = realpath(__ROOT__ .'resources/'. $wordlist .'/'. $wordlist .'_'. 
+          self::$configuration['language'] .'.txt');
+        self::$$wordlist = array_flip(file($path, FILE_IGNORE_NEW_LINES));
+      }
+    }
 
   }
 

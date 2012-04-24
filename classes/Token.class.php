@@ -30,13 +30,6 @@ class Token {
     $this->text = $text;
     $this->text_lowercase = mb_strtolower($this->text, 'UTF-8');
 
-    $wordlists = array('initwords', 'prefix_infix', 'stopwords');
-    foreach ($wordlists AS $wordlist) {
-      if (self::$$wordlist == NULL) {
-        $path = realpath(__ROOT__ .'resources/'. $wordlist .'/'. $wordlist .'_'. $language .'.txt');
-        self::$$wordlist = array_flip(file($path, FILE_IGNORE_NEW_LINES));
-      }
-    }
   }
 
   public function getText() {
@@ -48,15 +41,15 @@ class Token {
   }
 
   public function isStopWord() {
-    return isset(self::$stopwords[$this->text_lowercase]);
+    return isset(Tagger::$stopwords[$this->text_lowercase]);
   }
 
   public function isInitWord() {
-    return isset(self::$initwords[$this->text_lowercase]);
+    return isset(Tagger::$initwords[$this->text_lowercase]);
   }
 
   public function isPrefixOrInfix() {
-    return isset(self::$prefix_infix[$this->text_lowercase]);
+    return isset(Tagger::$prefix_infix[$this->text_lowercase]);
   }
 
   public function __toString() {
