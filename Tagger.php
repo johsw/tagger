@@ -33,6 +33,17 @@ class Tagger {
   public function getTaggerVersion() {
     return TAGGER_VERSION;
   }
+  
+  public function getVocabularyIds() {
+    $sql = sprintf("SELECT vid FROM tagger_lookup GROUP BY vid");
+    $result = TaggerQueryManager::query($sql);
+    $ids = array();
+    while ($row = TaggerQueryManager::fetch($result)) {
+      $ids[$row['vid']] = $row['vid'];
+    }
+    return $ids;
+  }
+
 
   public static function getTagger($configuration = array(), $file = 'conf.php') {
     if (!isset(self::$instance)) {
@@ -72,6 +83,7 @@ class Tagger {
       $tagger_conf = array_merge(self::$configuration, $args[0]);
       self::$configuration = $tagger_conf;
       return $tagger_conf;
+
     }
     if ($arg_count < 2) {
       throw new ErrorException('Need at least two arguments.');
