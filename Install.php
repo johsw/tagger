@@ -17,13 +17,8 @@ if (php_sapi_name() == 'cli') {
   $cargs = getopt('jf::');
 
   if (isset($cargs['f'])) {
-    if (file_exists($cargs['f'])) {
-      $file = $cargs['f'];
-      $tagger = Tagger::getTagger(array(), $file);
-    }
-    else {
-      die('Config file does not exist:' . $cargs['f']);
-    }
+    $file = $cargs['f'];
+    $tagger = Tagger::getTagger(array(), $file);
   }
 
   if (isset($cargs['j'])) {
