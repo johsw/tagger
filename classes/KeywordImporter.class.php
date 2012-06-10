@@ -1,4 +1,5 @@
 <?php
+ini_set('memory_limit', '1024M');
 
 require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
 
@@ -459,7 +460,7 @@ class KeywordImporter {
     $frequency = $this->countWords($text);
     $words_to_lookup = array_diff(array_keys($frequency), array_keys($db_cache));
 
-    $imploded_words = implode("','", array_map('mysql_real_escape_string', $words_to_lookup));
+    $imploded_words = implode("','", array_map('mysql_escape_string', $words_to_lookup));
 
     // Get statistics for the words in the article
     $result = TaggerQueryManager::query("SELECT * FROM $this->wordstatsTable WHERE word IN ('$imploded_words')");
