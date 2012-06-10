@@ -181,4 +181,14 @@ class Tagger {
     $tagged_text->process();
     return $tagged_text;
   }
+
+  require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
+  public function log($message, $level = 'Standard') {
+    $level = array_search($level, TaggerLogManager::$LOG_TYPE);
+    if ($level === FALSE) {
+      $level = TaggerLogManager::STANDARD;
+    }
+    TaggerLogManager::logMsg($message, $level);
+  }
+
 }
