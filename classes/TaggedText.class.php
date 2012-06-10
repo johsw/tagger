@@ -126,7 +126,14 @@ class TaggedText {
   }
 
   public function getTags() {
-    return $this->tags;
+    $keys = array_keys($this->tags);
+    $category_names = array_flip(Tagger::getConfiguration('ner_vocab_ids'));
+    $tags = array();
+    foreach ($keys as $key) {
+      $tags[$category_names[$key]] = $this->tags[$key];
+    }
+
+    return $tags;
   }
 
   public function getHighlightedText() {
