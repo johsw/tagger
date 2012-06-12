@@ -4,6 +4,7 @@ define('TAGGER_VERSION', 4);
 mb_internal_encoding('UTF-8');
 require_once __ROOT__ . 'classes/TaggerHelpers.class.php';
 require_once __ROOT__ . 'classes/TaggedText.class.php';
+require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 
 class Tagger {
 
@@ -179,7 +180,14 @@ class Tagger {
     return $tagged_text;
   }
 
-  require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
+  /**
+   * Log to the internal Tagger log
+   *
+   * @param $message
+   *   The text to be logged
+   * @param $level
+   *   The logging level of the message ('Verbose', 'Warning', 'Standard')
+   */
   public function log($message, $level = 'Standard') {
     $level = array_search($level, TaggerLogManager::$LOG_TYPE);
     if ($level === FALSE) {
