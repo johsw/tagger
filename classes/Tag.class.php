@@ -63,6 +63,12 @@ class Tag extends Token {
 
     $freq_rating = Tagger::getConfiguration($this->type, 'rating', 'frequency');
     $this->rating /= 1 + (($this->freqRating - 1) * (1 - $freq_rating));
+
+    // Normalization
+    $this->rating *= 10;
+    // Clamp within 0-100%
+    $this->rating = max(0, $this->rating);
+    $this->rating = min($this->rating, 100);
   }
 
   public function __toString() {
