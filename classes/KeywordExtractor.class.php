@@ -62,15 +62,20 @@ class KeywordExtractor {
         foreach (array_keys($subjects) as $key) {
           // Normalize
           $subjects[$key]['rating'] /= $this->word_count;
+
+          // Convert to percentage
+          $subjects[$key]['rating'] /= Tagger::getConfiguration('keyword', 'max_score');
+          $subjects[$key]['rating'] *= 100;
+
+          // Clamp within 0-100%
+          $subjects[$key]['rating'] = max(0, $subjects[$key]['rating']);
+          $subjects[$key]['rating'] = min($subjects[$key]['rating'], 100);
+
           // Threshold
           if ($subjects[$key]['rating'] < Tagger::getConfiguration('keyword', 'threshold')) {
             unset($subjects[$key]);
             continue;
           }
-          // Convert to percentage
-          $subjects[$key]['rating'] /= Tagger::getConfiguration('keyword', 'max_score');
-          $subjects[$key]['rating'] *= 100;
-          $subjects[$key]['rating'] = min($subjects[$key]['rating'], 100);
         }
       }
 
