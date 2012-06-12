@@ -107,9 +107,6 @@ class TaggedText {
         $disambiguator = new Disambiguator($tags, $this->text);
         $tags = $disambiguator->disambiguate();
       }
-      if ($this->options['return_uris']) {
-        $this->buildUriData();
-      }
       $this->tags += $tags;
 
       // mark up found tags in HTML
@@ -118,15 +115,51 @@ class TaggedText {
         TaggerLogManager::logDebug("HTML with highlighted tags:\n" . $this->highlightedText);
       }
     }
+
+    // Linked data
+    if (Tagger::getConfiguration('linked_data')) {
+      $this->tags = $this->addUris($this->tags);
+    }
   }
 
-  public function getTags() {
-    $keys = array_keys($this->tags);
-    $category_names = array_flip(Tagger::getConfiguration('ner_vocab_ids'));
-    $tags = array();
-    foreach ($keys as $key) {
-      $tags[$category_names[$key]] = $this->tags[$key];
+  public function getTags($options = array()) {
+
+    $default = Tagger::getConfiguration();
+
+    // let $options array override $configuration temporarily
+    Tagger::setConfiguration($default, $options);
+
+
+    function create_output($type, $full_tags) {
+      $vocab_ids = Tagger::getConfiguration($type, 'vocab_ids');
+      if ( Tagger::getConfiguration($type, 'debug') ) {
+        return array_intersect_key($full_tags, array_flip($vocab_ids));
+      }
+      else {
+        $tags = array();
+        $public_fields = Tagger::getConfiguration($type, 'public_fields');
+        foreach ($vocab_ids as $name => $id) {
+          if ( isset($full_tags[$id]) ) {
+            $tags[$name] = array();
+            foreach ($full_tags[$id] as $key => $tag) {
+              $tags[$name][$key] = array();
+              foreach ($public_fields as $field => $public_name) {
+                // get_object_vars($tag);
+                if (isset($tag->$field)) {
+                  $tags[$name][$key][$public_name] = $tag->$field;
+                }
+              }
+            }
+            uasort($tags[$name], create_function('$a, $b', 'return strnatcmp($b["rating"], $a["rating"]);'));
+          }
+        }
+        return $tags;
+      }
     }
+
+    $tags = create_output('keyword', $this->tags) + create_output('named_entity', $this->tags);
+
+    Tagger::setConfiguration($default);
 
     return $tags;
   }
@@ -151,13 +184,13 @@ class TaggedText {
               $start_token_part = &current($token->tokenParts);
               $end_token_part = &end($token->tokenParts);
 
-              $tag_start = $this->options['highlight']['start_tag'];
-              if ($this->options['highlight']['substitution']) {
+              $tag_start = Tagger::getConfiguration('named_entity', 'highlight', 'start_tag');
+              if (Tagger::getConfiguration('named_entity', 'highlight', 'substitution')) {
                 $tag_start = str_replace("!!ID!!", array_search($start_token_part, $token->tokenParts), $tag_start);
               }
 
               $start_token_part->text = $tag_start . $start_token_part->text;
-              $end_token_part->text .= $this->options['highlight']['end_tag'];
+              $end_token_part->text .= Tagger::getConfiguration('named_entity', 'highlight', 'end_tag');
 
               $token->hasBeenHighlighted = TRUE;
             }
@@ -173,31 +206,42 @@ class TaggedText {
     return $this->highlightedText;
   }
 
+  private function addUris($tags) {
+    if (empty($tags)) {
+      return $tags;
+    }
 
     $linked_data_table = Tagger::getConfiguration('db', 'linked_data_table');
 
-  private function buildUriData() {
-    foreach ($this->tags as $cat => $tags) {
-      foreach ($tags as $tid => $tag) {
-        $uris = $this->fetchUris($tid);
-        $this->tags[$cat][$tid]->uris = $uris;
+    $tids = array();
+    foreach ($tags as $vid => $vid_tags) {
+      foreach ($vid_tags as $tid => $tag) {
+        $tids[] = $tid;
       }
     }
-  }
-  private function fetchUris($tid) {
-    $db_conf = $this->tagger->getConfiguration('db');
-    $linked_data_table = $db_conf['linked_data_table'];
+    $tids_list = implode(',', $tids);
 
-    $sql = sprintf("SELECT dstid, uri FROM $linked_data_table WHERE tid = %s ORDER BY dstid ASC", $tid);
+    $sql = sprintf("SELECT tid, dstid, uri FROM $linked_data_table WHERE tid IN(%s) ORDER BY dstid ASC", $tids_list);
     $result = TaggerQueryManager::query($sql);
     $uris = array();
     $lod_sources = Tagger::getConfiguration('named_entity', 'lod_sources');
     while ($row = TaggerQueryManager::fetch($result)) {
-      $uris[$lod_sources[$row['dstid']]] = $row['uri'];
+      if (!isset($uris[$row['tid']])) {
+        $uris[$row['tid']] = array();
+      }
+      $uris[$row['tid']][$lod_sources['id' . $row['dstid']]] = $row['uri'];
     }
-    return $uris;
+
+    foreach ($tags as $cat => $cat_tags) {
+      foreach ($cat_tags as $tid => $tag) {
+        if (isset($uris[$tid])) {
+          $tags[$cat][$tid]->linked_data = $uris[$tid];
+        }
+      }
+    }
+
+    return $tags;
   }
 
-
 }
-?>
+
