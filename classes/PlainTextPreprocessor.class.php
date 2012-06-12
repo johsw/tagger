@@ -51,7 +51,7 @@ class PlainTextPreprocessor {
 
     }
 
-    if (Tagger::getConfiguration('highlight', 'enable')) {
+    if (Tagger::getConfiguration('named_entity', 'highlight', 'enable')) {
       $this->intermediateHTML = &$this->tokens;
     }
   }

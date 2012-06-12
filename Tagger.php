@@ -17,6 +17,8 @@ class Tagger {
   public static $prefix_infix;
   public static $stopwords;
 
+  private static $override = array('vocab_ids');
+
   private function __construct($configuration = array(), $file = 'conf.php')  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
     define('TAGGER_DIR', dirname(__FILE__));
@@ -93,28 +95,36 @@ class Tagger {
   public static function setConfiguration() {
     $arg_count = func_num_args();
     $args = func_get_args();
-    if (is_array($args[0])) {
-      $tagger_conf = array_merge(self::$configuration, $args[0]);
-      self::$configuration = $tagger_conf;
-      return $tagger_conf;
 
+    // if all arguments are arrays - merge them
+    if ( !in_array(FALSE, array_map('is_array', $args), TRUE) ) {
+      self::$configuration = call_user_func_array(
+        array('TaggerHelpers', 'arrayMergeRecursiveOverride'),
+        array_merge(array(self::$override, self::$configuration), $args)
+      );
+      return self::$configuration;
     }
-    if ($arg_count < 2) {
-      throw new ErrorException('Need at least two arguments.');
-    }
-    $opt =& self::$configuration;
-    $l = array_slice(func_get_args(), 1);
-    $setting_str = '$configuration';
-    foreach($l as $arg) {
-      $setting_str .= "['$arg']";
-      if (is_array($opt) && isset($opt[$arg])) {
-        $opt =& $opt[$arg];
-      } else {
-        throw new ErrorException('Setting ' . $setting_str . ' not found in configuration.');
+
+    // if all arguments are strings - set the option specified
+    if ( !in_array(FALSE, array_map('is_string', $args), TRUE) ) {
+      if ($arg_count < 2) {
+        throw new ErrorException('Need at least two arguments.');
       }
+
+      $opt =& self::$configuration;
+      $l = array_slice(func_get_args(), 1);
+      $setting_str = '$configuration';
+      foreach($l as $arg) {
+        $setting_str .= "['$arg']";
+        if (is_array($opt) && isset($opt[$arg])) {
+          $opt =& $opt[$arg];
+        } else {
+          throw new ErrorException('Setting ' . $setting_str . ' not found in configuration.');
+        }
+      }
+      $opt = func_get_arg(0);
+      return $opt;
     }
-    $opt = func_get_arg(0);
-    return $opt;
   }
 
   // Prevent users to clone the instance
@@ -151,34 +161,21 @@ class Tagger {
    */
 
   public function tagText($text, $options = array()) {
-    if (empty($options)) {
-      $options = array();
-    }
 
-    // let $options array override $configuration (i.e. conf.php and defaults.php)
-    foreach(self::$configuration as $key => $value) {
-      if (!isset($options[$key])) {
-        $options[$key] = $value;
-      }
-      else {
-        if(is_array($options[$key])) {
-          if ($key == 'ner_vocab_ids' || $key == 'keyword_vocab_ids') {
-            // we allow empty arrays here because that is how
-            // you disable NER or Keyword Extraction
-            continue;
-          } else {
-            $options[$key] = TaggerHelpers::arrayMergeRecursiveSimple(self::$configuration[$key], $options[$key]);
-          }
-        }
-      }
-    }
+    $default = self::$configuration;
 
-    if (empty($options['ner_vocab_ids']) && empty($options['keyword_vocab_ids'])) {
-      throw new ErrorException('Missing vocab definition in configuration.');
-    }
+    // let $options array override $configuration temporarily
+    self::setConfiguration(self::$configuration, $options);
 
-    $tagged_text = new TaggedText($text, $options);
+    //if (empty($options['ner_vocab_ids']) && empty($options['keyword_vocab_ids'])) {
+    //  throw new ErrorException('Missing vocab definition in configuration.');
+    //}
+
+    $tagged_text = new TaggedText($text);
     $tagged_text->process();
+
+    self::$configuration = $default;
+
     return $tagged_text;
   }
 

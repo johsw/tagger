@@ -15,7 +15,7 @@ abstract class Matcher {
 
     $this->matches = array();
     $this->nonmatches = array();
-    $this->vocabularies = implode(', ', Tagger::getConfiguration('ner_vocab_ids'));
+    $this->vocabularies = implode(', ', Tagger::getConfiguration('named_entity', 'vocab_ids'));
   }
 
   protected function term_query() {

@@ -11,16 +11,35 @@
   //Tagger default language - the codes are the same as html language codes (http://www.ietf.org/rfc/rfc1766.txt)
   $tagger_conf['language'] = 'da'; // Others could be sv (Sweden), nn (Norway - Nynorsk) and nb (Norway - Bokmål)
 
-  // Data sources for open linked data.
-  $tagger_conf['lod_sources'] = array(
-    1 => 'DBpedia',
-    2 => 'en.wikipedia.org',
-    3 => 'da.wikipedia.org',
-    4 => 'GeoNames',
-    5 => 'New York Times',
-    6 => 'NYT search api'
-    );
+  // Find URI to Wikipedia etc. for tags
+  $tagger_conf['linked_data'] = FALSE;
 
+
+  $tagger_conf['named_entity']['public_fields'] = array(
+    'realName' => 'name',
+    'rating' => 'rating',
+    'synonyms' => 'matches',
+  );
+
+  $tagger_conf['named_entity']['vocab_ids'] = array();
+
+  // Data sources for open linked data.
+  $tagger_conf['named_entity']['lod_sources'] = array(
+    'id1' => 'DBpedia',
+    'id2' => 'en.wikipedia.org',
+    'id3' => 'da.wikipedia.org',
+    'id4' => 'GeoNames',
+    'id5' => 'New York Times',
+    'id6' => 'NYT search api'
+  );
+
+  $tagger_conf['named_entity']['debug'] = FALSE;
+
+  // Disambiguation
+  $tagger_conf['named_entity']['disambiguate'] = TRUE;
+
+  // Logging of possible NE's that weren't found in database.
+  $tagger_conf['named_entity']['log_unmatched'] = FALSE;
 
   $tagger_conf['named_entity']['rating'] = array(
     // Settings for ratings of Named Entities
@@ -39,42 +58,8 @@
     // not be rated as low as the minimum rating
     'positional_critical_token_count' => 350,
   );
-
-  // Keyword-extraction configuration
-  // A keyword must be related to at least 15 texts for it to be 
-  // processed
-  $tagger_conf['keyword']['minimum_number_of_texts'] = 15;
-  $tagger_conf['keyword']['property'] = 'diff_outer_doc_freq';
-  $tagger_conf['keyword']['enable_stemmer'] = FALSE;
-  $tagger_conf['keyword']['normalize'] = FALSE;
-  // For a text be given 100% score it must have the equivalent of
-  // one full keyword per 100 words
-  $tagger_conf['keyword']['max_score'] = 1;
-  // For a text to be identified with a keyword
-  // it must have the equivalent of one full keyword per 250 words
-  $tagger_conf['keyword']['threshold'] = 1/250;
-
-  $tagger_conf['keyword']['debug'] = FALSE;
-
-  // Disambiguation
-  $tagger_conf['disambiguate'] = TRUE;
-
-  // Logging of possible NE's that weren't found in database.
-  $tagger_conf['log_unmatched'] = FALSE;
-
-  // Find URI to Wikipedia etc. for tags
-  $tagger_conf['return_uris'] = FALSE;
-
-  // Highlighting of tags
-  $tagger_conf['highlight'] = array(
-    'enable' => FALSE, // on/off toggle of tag-highlighting
-    'start_tag' => '<strong>',
-    'end_tag' => '</strong>',
-    'substitution' => FALSE,
-  );
-
-  // HTML rating
-  $tagger_conf['HTML'] = array(
+// HTML rating
+  $tagger_conf['named_entity']['HTML'] = array(
     // how the content of tags are rated
     'tags' => array(
       'h1' => 10,
@@ -91,6 +76,40 @@
       'h3',
     ),
   );
+
+  // Highlighting of tags
+  $tagger_conf['named_entity']['highlight'] = array(
+    'enable' => FALSE, // on/off toggle of tag-highlighting
+    'start_tag' => '<strong>',
+    'end_tag' => '</strong>',
+    'substitution' => FALSE,
+  );
+
+  // Keyword-extraction configuration
+  $tagger_conf['keyword']['public_fields'] = array(
+    'realName' => 'name',
+    'rating' => 'rating',
+    //'synonyms' => 'matches',
+  );
+
+
+  // A keyword must be related to at least 15 texts for it to be 
+  // processed
+  $tagger_conf['keyword']['minimum_number_of_texts'] = 15;
+  $tagger_conf['keyword']['property'] = 'diff_outer_doc_freq';
+  $tagger_conf['keyword']['enable_stemmer'] = FALSE;
+  $tagger_conf['keyword']['normalize'] = TRUE;
+  
+  // For a text be given 100% score it must have the equivalent of
+  // one full keyword per 100 words
+  $tagger_conf['keyword']['max_score'] = 1;
+  
+  // For a keyword to be listed it must have a score of a least 15%
+  $tagger_conf['keyword']['threshold'] = 15;
+
+  $tagger_conf['keyword']['debug'] = FALSE;
+
+  $tagger_conf['keyword']['vocab_ids'] = array();
 
   // Settings for logging
   $tagger_conf['log'] = array(
@@ -111,7 +130,3 @@
   $tagger_conf['db']['wordstats_table'] = 'tagger_wordstats' . $stemmer_postfix;
   $tagger_conf['db']['word_relations_table'] = 'tagger_word_relations_' . $tagger_conf['keyword']['property'] . $stemmer_postfix;
 
-
-  // Defaults
-  $tagger_conf['ner_vocab_ids'] = array();
-  $tagger_conf['keyword_vocab_ids'] = array();

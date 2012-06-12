@@ -21,7 +21,6 @@ class TaggedText {
   private $highlightedText;
   private $intermediateHTML;
 
-  private $options = array();
   private $tagger;
 
   /**
@@ -29,10 +28,8 @@ class TaggedText {
    *
    * @param string $text
    *   Text to be tagged.
-   * @param array $options
-   *   See documentation of tagText funtion
    */
-  public function __construct($text, $options) {
+  public function __construct($text) {
 
     if (empty($text)) {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
@@ -46,7 +43,6 @@ class TaggedText {
     }
 
     $this->tagger = Tagger::getTagger();
-    $this->options = $options;
 
   }
 
@@ -54,13 +50,13 @@ class TaggedText {
     TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
     // Tokenize - with/without HTML.
-    if ($this->options['named_entity']['rating']['HTML'] !== 0) {
+    if (Tagger::getConfiguration('named_entity', 'rating', 'HTML') !== 0) {
       require_once __ROOT__ . 'classes/HTMLPreprocessor.class.php';
-      $preprocessor = new HTMLPreprocessor($this->text, $this->options);
+      $preprocessor = new HTMLPreprocessor($this->text);
     }
     else {
       require_once __ROOT__ . 'classes/PlainTextPreprocessor.class.php';
-      $preprocessor = new PlainTextPreprocessor($this->text, $this->options);
+      $preprocessor = new PlainTextPreprocessor($this->text);
     }
     $preprocessor->parse();
     $this->partialTokens = &$preprocessor->tokens;
@@ -70,24 +66,25 @@ class TaggedText {
 
     // Rate the partial tokens
     foreach ($this->partialTokens as $token) {
-      $token->rateToken($this->tokenCount, $this->paragraphCount, $this->options['named_entity']['rating']);
+      $token->rateToken($this->tokenCount, $this->paragraphCount, Tagger::getConfiguration('named_entity', 'rating'));
     }
     TaggerLogManager::logDebug("Tokens\n" . print_r($this->partialTokens, TRUE));
 
     // Keyword extraction
     // - if keyword-vocabs are provided
-    if (count($this->options['keyword_vocab_ids']) > 0) {
+    if (count( Tagger::getConfiguration('keyword', 'vocab_ids') ) > 0) {
       require_once __ROOT__ . 'classes/KeywordExtractor.class.php';
       // Deep copy of partialTokens
-      $keyword_extractor = new KeywordExtractor(unserialize(serialize($this->partialTokens)), $this->options);
+      $keyword_extractor = new KeywordExtractor(unserialize(serialize($this->partialTokens)));
       $keyword_extractor->determine_keywords();
       if (isset($keyword_extractor->tags) && !empty($keyword_extractor->tags)) {
         $this->tags += $keyword_extractor->tags;
       }
     }
 
-    // Do NER if NER-vocabs are provided
-    if (count($this->options['ner_vocab_ids']) > 0) {
+    // NER 
+    // - if NER-vocabs are provided
+    if (count( Tagger::getConfiguration('named_entity', 'vocab_ids') ) > 0) {
 
       // Do named entity recognition: find named entities.
       $ner_matcher = new NamedEntityMatcher($this->partialTokens);
@@ -95,19 +92,17 @@ class TaggedText {
       $tags = $ner_matcher->get_matches();
 
       // Rate the tags (named entities).
-      $rating = $this->options['named_entity']['rating'];
-      //array_walk_recursive($tags, call_user_func(array('Tag', 'rate'), $rating));
       array_walk_recursive($tags, create_function('$tag', '$tag->rate();'));
 
 
       // Capture unmatched tags
-      if ($this->options['log_unmatched']) {
+      if (Tagger::getConfiguration('named_entity', 'log_unmatched')) {
         $unmatched_entities = $ner_matcher->get_nonmatches();
         $unmatched = new Unmatched($unmatched_entities);
         $unmatched->logUnmatched();
       }
       // Disambiguate
-      if ($this->options['disambiguate']) {
+      if (Tagger::getConfiguration('named_entity', 'disambiguate')) {
         require_once 'classes/Disambiguator.class.php';
         $disambiguator = new Disambiguator($tags, $this->text);
         $tags = $disambiguator->disambiguate();
@@ -118,7 +113,7 @@ class TaggedText {
       $this->tags += $tags;
 
       // mark up found tags in HTML
-      if ($this->options['highlight']['enable']) {
+      if (Tagger::getConfiguration('named_entity', 'highlight', 'enable')) {
         $this->highlightTags();
         TaggerLogManager::logDebug("HTML with highlighted tags:\n" . $this->highlightedText);
       }
@@ -179,6 +174,7 @@ class TaggedText {
   }
 
 
+    $linked_data_table = Tagger::getConfiguration('db', 'linked_data_table');
 
   private function buildUriData() {
     foreach ($this->tags as $cat => $tags) {
@@ -195,7 +191,7 @@ class TaggedText {
     $sql = sprintf("SELECT dstid, uri FROM $linked_data_table WHERE tid = %s ORDER BY dstid ASC", $tid);
     $result = TaggerQueryManager::query($sql);
     $uris = array();
-    $lod_sources = $this->tagger->getConfiguration('lod_sources');
+    $lod_sources = Tagger::getConfiguration('named_entity', 'lod_sources');
     while ($row = TaggerQueryManager::fetch($result)) {
       $uris[$lod_sources[$row['dstid']]] = $row['uri'];
     }
