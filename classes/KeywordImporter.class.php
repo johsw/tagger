@@ -529,7 +529,12 @@ class KeywordImporter {
   public function tidToName($tid) {
 
     $query = "SELECT name FROM $this->lookupTable WHERE vid = 16 AND tid = $tid AND canonical = 1";
-    $result = TaggerQueryManager::query($query);
+    try {
+      $result = TaggerQueryManager::query($query);
+    }
+    catch($e) {
+      return FALSE;
+    }
     if ($row = TaggerQueryManager::fetch($result)) {
       return $row['name'];
     }
