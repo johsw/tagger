@@ -1,4 +1,6 @@
 <?php
+ini_set('memory_limit', '92M');
+
 define('__ROOT__', dirname(__FILE__) . '/');
 define('TAGGER_VERSION', 4);
 mb_internal_encoding('UTF-8');
