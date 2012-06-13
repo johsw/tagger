@@ -532,7 +532,7 @@ class KeywordImporter {
     try {
       $result = TaggerQueryManager::query($query);
     }
-    catch($e) {
+    catch(Exception $e) {
       return FALSE;
     }
     if ($row = TaggerQueryManager::fetch($result)) {

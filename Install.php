@@ -36,3 +36,4 @@ if ($run_json) {
   $KI->jsonCreateWordstats(__ROOT__ . 'keyword_texts.json');
   $KI->jsonCreateWordRelations(__ROOT__ . 'keyword_texts.json');
 }
+
