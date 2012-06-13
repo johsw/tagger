@@ -106,7 +106,6 @@ class KeywordImporter {
     $tids = array_keys($tids_texts);
 
     if ($check) {
-      $error = false;
 
       $keywords = array();
       foreach ($tids as $tid) {
@@ -117,9 +116,8 @@ class KeywordImporter {
           $keywords[$tid] = $name;
         }
         else {
-          echo "$tid: Not found.\n";
+          echo "'$tid': Not found.\n";
           unset($tids_texts[$tid]);
-          $error = true;
         }
       }
 
@@ -144,13 +142,10 @@ class KeywordImporter {
       $keyword_count = count(array_keys($tid));
     }
 
-    if ($error) {
-      die("Errors in TIDs found. Exiting\n");
-    }
 
     //$keywords = array_slice($keywords, 0, $maximum_keyword_add_count, true);
 
-    $property_esc = mysql_escape_string($this->property);
+    $property_esc = TaggerQueryManager::quote($this->property);
 
     $new_keywords = 0;
 
@@ -208,7 +203,7 @@ class KeywordImporter {
       return FALSE;
     }
 
-    $property_esc = mysql_real_escape_string($this->property);
+    $property_esc = TaggerQueryManager::quote($this->property);
 
     // Get and score the words related to this keyword
     $result = $this->findSignificantWords($texts);
@@ -435,8 +430,8 @@ class KeywordImporter {
         $sql .= ', ';
       }
 
-      $key = mysql_escape_string($key);
-      $sql .= "('$key', $value[word_count], $value[doc_count])";
+      $key = TaggerQueryManager::quote($key);
+      $sql .= "($key, $value[word_count], $value[doc_count])";
 
       $counter++;
 
@@ -460,10 +455,10 @@ class KeywordImporter {
     $frequency = $this->countWords($text);
     $words_to_lookup = array_diff(array_keys($frequency), array_keys($db_cache));
 
-    $imploded_words = implode("','", array_map('mysql_escape_string', $words_to_lookup));
+    $words = $words_to_lookup;
 
     // Get statistics for the words in the article
-    $result = TaggerQueryManager::query("SELECT * FROM $this->wordstatsTable WHERE word IN ('$imploded_words')");
+    $result = TaggerQueryManager::query("SELECT * FROM $this->wordstatsTable WHERE word IN (:words)", array(':words' => $words));
 
     $unmatched_database = array();
     $unmatched_words = $frequency;

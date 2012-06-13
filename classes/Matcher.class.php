@@ -15,62 +15,64 @@ abstract class Matcher {
 
     $this->matches = array();
     $this->nonmatches = array();
-    $this->vocabularies = implode(', ', Tagger::getConfiguration('named_entity', 'vocab_ids'));
+    $this->vocabularies = Tagger::getConfiguration('named_entity', 'vocab_ids');
   }
 
   protected function term_query() {
     $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
 
     if (!empty($this->vocabularies) && !empty($this->tokens)) {
-      $imploded_words = implode("','", array_map('mysql_escape_string', array_keys($this->tokens)));
       $unmatched = $this->tokens;
 
       // First we find synonyms
+      $query = "SELECT tid, name FROM $lookup_table WHERE name IN(:words) AND vid IN(:vocabularies)";
+      $args = array(':words' => array_keys($this->tokens), ':vocabularies' => array_values($this->vocabularies));
+      $result = TaggerQueryManager::query($query, $args);
+
       $synonyms = array();
-      $query = "SELECT tid, name FROM $lookup_table WHERE name IN('$imploded_words') AND vid IN($this->vocabularies)";
-      TaggerLogManager::logDebug("Synonym-query:\n" . $query);
-      $result = TaggerQueryManager::query($query);
       while ($row = TaggerQueryManager::fetch($result)) {
         $synonyms[$row['tid']][] = mb_strtolower($row['name']);
         unset($unmatched[mb_strtolower($row['name'])]);
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
-      $synonym_ids_imploded = implode("','", array_keys($synonyms));
 
       // Then we find the actual names of entities
-      $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM $lookup_table WHERE vid IN($this->vocabularies) AND tid IN('$synonym_ids_imploded') AND canonical = 1 GROUP BY name";
-      TaggerLogManager::logDebug("Match-query:\n" . $query);
-      $result = TaggerQueryManager::query($query);
+      if (!empty($synonyms)) {
 
-      while ($row = TaggerQueryManager::fetch($result)) {
-        if($row['name'] != '') {
-          $row_matches = array();
-          $row_name_lowered = mb_strtolower($row['name']);
-          if (array_key_exists($row_name_lowered, $unmatched)) {
-            unset($unmatched[$row_name_lowered]);
-            $row_matches[] = $this->tokens[$row_name_lowered];
-          }
-          if (array_key_exists($row['tid'], $synonyms)) {
-            foreach ($synonyms[$row['tid']] as $synonym) {
-              unset($unmatched[$synonym]);
-              $row_matches[] = $this->tokens[$synonym];
+        $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM $lookup_table WHERE vid IN(:vocabularies) AND tid IN(:synonym_ids) AND canonical = 1 GROUP BY name";
+        $args = array(':vocabularies' => array_values($this->vocabularies), ':synonym_ids' => array_keys($synonyms));
+        $result = TaggerQueryManager::query($query, $args);
+  
+        while ($row = TaggerQueryManager::fetch($result)) {
+          if($row['name'] != '') {
+            $row_matches = array();
+            $row_name_lowered = mb_strtolower($row['name']);
+            if (array_key_exists($row_name_lowered, $unmatched)) {
+              unset($unmatched[$row_name_lowered]);
+              $row_matches[] = $this->tokens[$row_name_lowered];
+            }
+            if (array_key_exists($row['tid'], $synonyms)) {
+              foreach ($synonyms[$row['tid']] as $synonym) {
+                unset($unmatched[$synonym]);
+                $row_matches[] = $this->tokens[$synonym];
+              }
+            }
+            $match = Tag::mergeTags($row_matches);
+            $match->ambiguous = ($row['count'] > 1);
+            if ($match->ambiguous) {
+              $match->meanings = $row['tids'];
+            }
+            if (isset($this->matches[$row['vid']][$row['tid']])) {
+              $this->matches[$row['vid']][$row['tid']] = Tag::mergeTags(array($match, $this->matches[$row['vid']][$row['tid']]), $row['name']);
+            } else {
+              $match->realName = $row['name'];
+              $this->matches[$row['vid']][$row['tid']] = $match;
             }
           }
-          $match = Tag::mergeTags($row_matches);
-          $match->ambiguous = ($row['count'] > 1);
-          if ($match->ambiguous) {
-            $match->meanings = $row['tids'];
-          }
-          if (isset($this->matches[$row['vid']][$row['tid']])) {
-            $this->matches[$row['vid']][$row['tid']] = Tag::mergeTags(array($match, $this->matches[$row['vid']][$row['tid']]), $row['name']);
-          } else {
-            $match->realName = $row['name'];
-            $this->matches[$row['vid']][$row['tid']] = $match;
-          }
         }
+        TaggerLogManager::logVerbose("Matches:\n" . print_r($this->matches, TRUE));
       }
       $this->nonmatches = $unmatched;
-      TaggerLogManager::logVerbose("Matches:\n" . print_r($this->matches, TRUE));
       TaggerLogManager::logVerbose("Unmatched:\n" . print_r($this->nonmatches, TRUE));
     }
     else if(empty($this->vocabularies)) {

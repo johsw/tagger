@@ -34,12 +34,12 @@ class KeywordExtractor {
     $word_relations_table = Tagger::getConfiguration('db', 'word_relations_table');
     $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
 
-    $implode_words = implode("','", array_map(create_function('$tag', 'return mysql_escape_string($tag->text);'), $this->word_tags));
+    $words = array_map(create_function('$tag', 'return $tag->text;'), $this->word_tags);
 
     // Find keyword relations from the words in the text
-    $query = "SELECT * FROM $word_relations_table WHERE word IN ('$implode_words.')";
-    TaggerLogManager::logDebug("Query:\n" . $query);
-    $result = TaggerQueryManager::query($query);
+    $query = "SELECT * FROM $word_relations_table WHERE word IN (:words)";
+    $args = array(':words' => $words);
+    $result = TaggerQueryManager::query($query, $args);
     if ($result) {
       $subjects = array();
 
@@ -84,11 +84,12 @@ class KeywordExtractor {
 
       // Get subject names and create tags
       if (!empty($subjects)) {
-        $implode_subjects_ids = implode(',', array_map('mysql_escape_string', array_keys($subjects)));
-        $vocab_ids = implode(',', Tagger::getConfiguration('keyword', 'vocab_ids'));
+        $subject_ids = array_keys($subjects);
+        $vocab_ids = Tagger::getConfiguration('keyword', 'vocab_ids');
 
-        $query = "SELECT tid, vid, name FROM $lookup_table WHERE tid IN ($implode_subjects_ids) AND vid IN ($vocab_ids)";
-        $result = TaggerQueryManager::query($query);
+        $query = "SELECT tid, vid, name FROM $lookup_table WHERE tid IN (:subject_ids) AND vid IN (:vocab_ids)";
+        $args = array(':subject_ids' => $subject_ids, ':vocab_ids' => $vocab_ids);
+        $result = TaggerQueryManager::query($query, $args);
         while ($row = TaggerQueryManager::fetch($result)) {
           $tag = new Tag($row['name']);
           $tag->rating = $subjects[$row['tid']]['rating'];

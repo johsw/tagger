@@ -55,7 +55,23 @@ class TaggerQueryHandler {
     }
     
     if (!empty($args)) {
-      $result = self::$instance->link->query(sprintf($sql, $args));  
+      foreach (array_keys($args) as $key) {
+        $value = $args[$key];
+        if (is_array($value)) {
+          unset($args[$key]);
+          $new_keys = array();
+          $i = 0;
+          foreach ($value as $v) {
+            $new_keys[$key . '_' . $i++] = $v;
+          }
+          # Stolen from Drupal 7.14: includes/database/database.inc:736
+          $sql = preg_replace('#' . $key . '\b#', implode(', ', array_keys($new_keys)), $sql);
+          $args = array_merge($args, $new_keys);
+        }
+      }
+      $stmt = self::$instance->link->prepare($sql);
+      $stmt->execute($args);
+      $result = $stmt;
     }
     else {
       $result = self::$instance->link->query($sql);  
@@ -65,7 +81,7 @@ class TaggerQueryHandler {
       return $result;
     } else {
       $error_msg = self::$instance->link->errorInfo();
-      die('Database error: '. $error_msg[2] . "\n" . 'Query: ' . $sql);
+      throw new Exception('Database error: '. $error_msg[2] . "\n" . 'Query: ' . $sql);
     }
   }
 
