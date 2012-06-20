@@ -82,10 +82,9 @@ class TaggedText {
       }
     }
 
-    // NER 
+    // NER
     // - if NER-vocabs are provided
     if (count( Tagger::getConfiguration('named_entity', 'vocab_ids') ) > 0) {
-
       // Do named entity recognition: find named entities.
       $ner_matcher = new NamedEntityMatcher($this->partialTokens);
       $ner_matcher->match();
@@ -129,6 +128,9 @@ class TaggedText {
     // let $options array override $configuration temporarily
     Tagger::setConfiguration($default, $options);
 
+    if ( Tagger::getConfiguration('return_full_tag_object') ) {
+      return $this->tags;
+    }
 
     function create_output($type, $full_tags) {
       $vocab_ids = Tagger::getConfiguration($type, 'vocab_ids');

@@ -35,7 +35,6 @@ abstract class Matcher {
         unset($unmatched[mb_strtolower($row['name'])]);
         TaggerLogManager::logDebug("Synonym:\n" . print_r($row, TRUE));
       }
-
       // Then we find the actual names of entities
       if (!empty($synonyms)) {
 
