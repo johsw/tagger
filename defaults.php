@@ -14,6 +14,7 @@
   // Find URI to Wikipedia etc. for tags
   $tagger_conf['linked_data'] = FALSE;
 
+  $tagger_conf['return_full_tag_object'] = FALSE;
 
   $tagger_conf['named_entity']['public_fields'] = array(
     'realName' => 'name',
@@ -93,17 +94,17 @@
   );
 
 
-  // A keyword must be related to at least 15 texts for it to be 
+  // A keyword must be related to at least 15 texts for it to be
   // processed
   $tagger_conf['keyword']['minimum_number_of_texts'] = 15;
   $tagger_conf['keyword']['property'] = 'diff_outer_doc_freq';
   $tagger_conf['keyword']['enable_stemmer'] = FALSE;
   $tagger_conf['keyword']['normalize'] = TRUE;
-  
+
   // For a text be given 100% score it must have the equivalent of
   // one full keyword per 100 words
   $tagger_conf['keyword']['max_score'] = 1;
-  
+
   // For a keyword to be listed it must have a score of a least 15%
   $tagger_conf['keyword']['threshold'] = 15;
 

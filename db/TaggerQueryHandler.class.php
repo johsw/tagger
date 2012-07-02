@@ -5,9 +5,8 @@ class TaggerQueryHandler {
   private static $link = NULL;
   private static $instance = NULL;
   private function __construct() {
-    $tagger_instance = Tagger::getTagger();
-    $db_settings = $tagger_instance->getConfiguration('db');
 
+    $db_settings = Tagger::getConfiguration('db');
     try {
       if($db_settings['type'] != 'sqlite') {
         // Anything but SQLite
@@ -41,7 +40,7 @@ class TaggerQueryHandler {
       case 'assoc':
         return $result->fetch(PDO::FETCH_ASSOC);
         break;
-      
+
       default:
         return $result->fetch(PDO::FETCH_ASSOC);
         break;
@@ -53,7 +52,7 @@ class TaggerQueryHandler {
       $c = __CLASS__;
       self::$instance = new $c;
     }
-    
+
     if (!empty($args)) {
       foreach (array_keys($args) as $key) {
         $value = $args[$key];
@@ -72,9 +71,10 @@ class TaggerQueryHandler {
       $stmt = self::$instance->link->prepare($sql);
       $stmt->execute($args);
       $result = $stmt;
+
     }
     else {
-      $result = self::$instance->link->query($sql);  
+      $result = self::$instance->link->query($sql);
     }
 
     if($result) {
@@ -113,7 +113,7 @@ class TaggerQueryHandler {
         $error_info = $st->errorInfo();
         throw new Exception('Insert failed: ' . $error_info[2]);
       }
-      
+
       $insert_count++;
       if ($insert_count == $num) {
         $commit_bool = self::$instance->link->commit();

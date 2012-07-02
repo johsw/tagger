@@ -41,7 +41,7 @@ class Tagger {
     $wordlists = array('initwords', 'prefix_infix', 'stopwords');
     foreach ($wordlists AS $wordlist) {
       if (self::$$wordlist == NULL) {
-        $path = realpath(__ROOT__ .'resources/'. $wordlist .'/'. $wordlist .'_'. 
+        $path = realpath(__ROOT__ .'resources/'. $wordlist .'/'. $wordlist .'_'.
           self::$configuration['language'] .'.txt');
         self::$$wordlist = array_flip(file($path, FILE_IGNORE_NEW_LINES));
       }
@@ -52,7 +52,7 @@ class Tagger {
   public function getTaggerVersion() {
     return TAGGER_VERSION;
   }
-  
+
   public function getVocabularyIds() {
     $sql = sprintf("SELECT vid FROM tagger_lookup GROUP BY vid");
     $result = TaggerQueryManager::query($sql);
@@ -166,17 +166,32 @@ class Tagger {
   public function tagText($text, $options = array()) {
 
     $default = self::$configuration;
+    $filtered_conf = array();
 
-    // let $options array override $configuration temporarily
-    self::setConfiguration(self::$configuration, $options);
+    //These configuration options can be overriden when this function is called
+    $conf = array(
+      'named_entity',
+      'keyword',
+      'return_marked_text',
+      'linked_data',
+    );
+    foreach ($conf as $key) {
+      if (isset($options[$key])) {
+        $filtered_conf[$key] = $options[$key];
+      }
+    }
+    // let some $options override $configuration temporarily
+    self::setConfiguration(self::$configuration, $filtered_conf);
 
-    //if (empty($options['ner_vocab_ids']) && empty($options['keyword_vocab_ids'])) {
-    //  throw new ErrorException('Missing vocab definition in configuration.');
-    //}
+    $ner      = Tagger::getConfiguration('named_entity', 'vocab_ids');
+    $keyword  = Tagger::getConfiguration('keyword', 'vocab_ids');
+    if (empty($ner) && empty($keyword)) {
+      throw new ErrorException('Missing vocab definition in configuration.');
+    }
+
 
     $tagged_text = new TaggedText($text);
     $tagged_text->process();
-
     self::$configuration = $default;
 
     return $tagged_text;
