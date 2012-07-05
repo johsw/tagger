@@ -132,34 +132,36 @@ class TaggedText {
       return $this->tags;
     }
 
-    function create_output($type, $full_tags) {
+    $tags = array();
+
+    foreach (array('keyword', 'named_entity') as $type) {
       $vocab_ids = Tagger::getConfiguration($type, 'vocab_ids');
       if ( Tagger::getConfiguration($type, 'debug') ) {
-        return array_intersect_key($full_tags, array_flip($vocab_ids));
+        return array_intersect_key($this->tags, array_flip($vocab_ids));
       }
       else {
-        $tags = array();
+        $type_tags = array();
         $public_fields = Tagger::getConfiguration($type, 'public_fields');
         foreach ($vocab_ids as $name => $id) {
-          if ( isset($full_tags[$id]) ) {
-            $tags[$name] = array();
-            foreach ($full_tags[$id] as $key => $tag) {
-              $tags[$name][$key] = array();
+          if ( isset($this->tags[$id]) ) {
+            $type_tags[$name] = array();
+            foreach ($this->tags[$id] as $key => $tag) {
+              $type_tags[$name][$key] = array();
               foreach ($public_fields as $field => $public_name) {
                 // get_object_vars($tag);
                 if (isset($tag->$field)) {
-                  $tags[$name][$key][$public_name] = $tag->$field;
+                  $type_tags[$name][$key][$public_name] = $tag->$field;
                 }
               }
             }
-            uasort($tags[$name], create_function('$a, $b', 'return strnatcmp($b["rating"], $a["rating"]);'));
+            uasort($type_tags[$name], create_function('$a, $b', 'return strnatcmp($b["rating"], $a["rating"]);'));
           }
         }
-        return $tags;
+        $tags += $type_tags;
       }
     }
 
-    $tags = create_output('keyword', $this->tags) + create_output('named_entity', $this->tags);
+    //$tags = create_output('keyword', $this->tags) + create_output('named_entity', $this->tags);
 
     Tagger::setConfiguration($default);
 
