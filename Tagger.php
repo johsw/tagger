@@ -1,27 +1,76 @@
 <?php
-ini_set('memory_limit', '92M');
+/**
+ * @file
+ * Definition of Tagger. The base of the Tagger library.
+ */
 
+/**
+ * The full path of the root directory of Tagger.
+ */
 define('__ROOT__', dirname(__FILE__) . '/');
+
+/**
+ * The Tagger version number.
+ */
 define('TAGGER_VERSION', 4);
+
+
+ini_set('memory_limit', '92M');
 mb_internal_encoding('UTF-8');
+
 require_once __ROOT__ . 'classes/TaggerHelpers.class.php';
 require_once __ROOT__ . 'classes/TaggedText.class.php';
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 
+
+/**
+ * The Tagger root class
+ *
+ * A singleton that can be accessed statically
+ *
+ */
 class Tagger {
 
+
+  /**
+   * The singleton instance.
+   */
   private static $instance;
 
-  private static $conf_settings;
-
+  /**
+   * The Tagger configuration.
+   */
   private static $configuration;
 
+  /**
+   * Variable for holding the list of initwords.
+   */
   public static $initwords;
+
+  /**
+   * Variable for holding the list of prefix/infix words.
+   */
   public static $prefix_infix;
+
+  /**
+   * Variable for holding the list of stopwords.
+   */
   public static $stopwords;
 
+  /**
+   * When overriding the configuration the settings in this array will be fully 
+   * overriden (not appended to). Defaults to array('vocab_ids').
+   */
   private static $override = array('vocab_ids');
 
+  /**
+   * Constructs the Tagger object.
+   *
+   * @param array $configuration
+   *   Configuration for the current Tagger session.
+   * @param string $file
+   *   Configuration file to be loaded. Defaults to 'conf.php'.
+   */
   private function __construct($configuration = array(), $file = 'conf.php')  {
     set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
     define('TAGGER_DIR', dirname(__FILE__));
@@ -49,10 +98,16 @@ class Tagger {
 
   }
 
-  public function getTaggerVersion() {
+  /**
+   * Returns Tagger version number.
+   */
+  public static function getTaggerVersion() {
     return TAGGER_VERSION;
   }
 
+  /**
+   * Returns vocabulary ids.
+   */
   public function getVocabularyIds() {
     $sql = sprintf("SELECT vid FROM tagger_lookup GROUP BY vid");
     $result = TaggerQueryManager::query($sql);
@@ -63,7 +118,9 @@ class Tagger {
     return $ids;
   }
 
-
+  /**
+   * Returns singleton Tagger instance.
+   */
   public static function getTagger($configuration = array(), $file = 'conf.php') {
     if (!isset(self::$instance)) {
         $c = __CLASS__;
@@ -72,7 +129,15 @@ class Tagger {
     return self::$instance;
   }
 
-
+  /**
+   * Returns either full configuration or a single setting.
+   *
+   * If called with no arguments this function returns the full configuration
+   * array.
+   * If called with arguments, each argument is a key in the configuration array
+   * i.e. getConfiguration('keyword', 'vocab_ids') == 
+   *        $configuration['keyword']['vocab_ids']
+   */
   public static function getConfiguration() {
     self::getTagger();
 
@@ -95,6 +160,16 @@ class Tagger {
     }
   }
 
+  /**
+   * Sets either full configuration or a single setting.
+   *
+   * If called with array arguments this merges the current configuration
+   * with the arguments.
+   * If called with non-array arguments the first argument is the new value of
+   * the setting. Each following argument is a key in the configuration array.
+   * i.e. setConfiguration(array(17), 'keyword', 'vocab_ids'): 
+   *        $configuration['keyword']['vocab_ids'] = array(17);
+   */
   public static function setConfiguration() {
     $arg_count = func_num_args();
     $args = func_get_args();
@@ -200,10 +275,11 @@ class Tagger {
   /**
    * Log to the internal Tagger log
    *
-   * @param $message
+   * @param string $message
    *   The text to be logged
-   * @param $level
+   * @param string $level
    *   The logging level of the message ('Verbose', 'Warning', 'Standard')
+   *   Defaults to 'Standard'.
    */
   public function log($message, $level = 'Standard') {
     $level = array_search($level, TaggerLogManager::$LOG_TYPE);
