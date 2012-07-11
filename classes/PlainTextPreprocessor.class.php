@@ -1,18 +1,54 @@
 <?php
+/**
+ * @file
+ * Definition of PlainTextPreprocessor.
+ */
 
 require_once __ROOT__ . 'classes/Tokenizer.class.php';
 
+/**
+ * Preprocessor for plain text (non-HTML).
+ *
+ * Counts words and paragraphs in the text.
+ *
+ * @see HTMLPreprocessor
+ */
+
 class PlainTextPreprocessor {
-  public $text;
+
+  /**
+   * The text to be preprocessed.
+   */
+  private $text;
+
+  /**
+   * Number of paragraphs in the text.
+   */
   public $paragraphCount = 0;
+
+  /**
+   * Number of tokens in the text.
+   */
   public $tokenCount = 0;
 
-  public $intermediateHTML;
-
-  private $tagger;
-
+  /**
+   * Tokens in the text.
+   */
   public $tokens;
 
+  /**
+   * Structure for highlighting.
+   */
+  public $intermediateHTML;
+
+
+
+  /**
+   * Constructs the PlainTextPreprocessor
+   *
+   * @param string $text
+   *   The text to be preprocessed.
+   */
   public function __construct($text) {
     $this->tagger = Tagger::getTagger();
 
@@ -26,6 +62,11 @@ class PlainTextPreprocessor {
   }
 
 
+  /**
+   * The preprocessing function.
+   *
+   * Tokenizes the text and assigns paragraph numbers to the tokens.
+   */
   public function parse() {
     $tokenizer = new Tokenizer($this->text, true);
     $this->tokens = $tokenizer->tokens;
