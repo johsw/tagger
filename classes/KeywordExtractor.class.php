@@ -1,19 +1,40 @@
 <?php
+/**
+ * @file
+ * Definition of KeywordExtractor.
+ */
 
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
 
+/**
+ * Implementation of keyword extraction functionality.
+ */
 class KeywordExtractor {
-  public $words;
+
+  /**
+   * Words of the text. An array of Tag.
+   */
+  private $words;
+
+  /**
+   * The keywords related to this text.
+   *
+   * The determine_keywords member function saves keywords with score above the
+   * threshold in this variable.
+   */
   public $tags;
 
   private $constant;
 
+  /**
+   * Constructs a KeywordExtractor object.
+   */
   function __construct($tokens) {
-    $this->tagger = Tagger::getTagger();
 
     $this->words = array();
 
+    // Removes non words from the $tokens array.
     foreach (array_keys($tokens) as $key) {
       if (!preg_match('/^\w/u', $tokens[$key]->text)) {
         unset($tokens[$key]);
@@ -33,6 +54,14 @@ class KeywordExtractor {
     $this->word_count = array_sum(array_map(create_function('$tag', 'return $tag->freqRating;'), $this->words));
   }
 
+  /**
+   * Find keywords related to the text.
+   *
+   * Uses the related words table from the database to look up every word in the
+   * text and add their score to related keywords' score.
+   * The found keywords that have a score above the threshold are saved in
+   * the $tags member variable.
+   */
   public function determine_keywords() {
     $word_relations_table = Tagger::getConfiguration('db', 'word_relations_table');
     $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
