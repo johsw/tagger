@@ -35,22 +35,6 @@ class Tag extends Token {
     }
   }
 
-  public static function mergeTags($tags, $real_name = '') {
-    $ret_tag = new Tag($real_name);
-    $ret_tag->realName = $real_name;
-    foreach ($tags as $tag) {
-      $ret_tag->synonyms = array_unique(array_merge($ret_tag->synonyms, $tag->synonyms));
-      $ret_tag->tokens   = array_merge_recursive($ret_tag->tokens, $tag->tokens);
-      if(isset($tag->ambiguous)) {
-        $ret_tag->ambiguous = $tag->ambiguous;
-      }
-      if(isset($tag->meanings)) {
-        $ret_tag->meanings = $tag->meanings;
-      }
-    }
-    return $ret_tag;
-  }
-
   public function rate() {
     foreach ($this->tokens as $synonym_tokens) {
       foreach ($synonym_tokens as $token) {
@@ -78,25 +62,5 @@ class Tag extends Token {
     return $str;
   }
 
-  public static function mergeTokens($tokens) {
-    $tags = array();
-
-    for ($i = 0, $n = count($tokens)-1; $i <= $n; $i++) {
-      if (isset($tokens[$i])) {
-        $tag = new Tag($tokens[$i]);
-        for ($j = $i; $j <= $n; $j++) {
-          if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
-            $tag->tokens[$tag->text][] = &$tokens[$j];
-            unset($tokens[$j]);
-          }
-        }
-        $tags[] = $tag;
-      }
-    }
-
-    return $tags;
-  }
-
 }
-
 

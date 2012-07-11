@@ -20,7 +20,7 @@ class NamedEntityMatcher extends Matcher {
     $potential_entities = $this->flattenTokens($potential_entities);
     TaggerLogManager::logDebug("Flattened:\n" . print_r($potential_entities, TRUE));
 
-    $potential_entities = Tag::mergeTokens($potential_entities);
+    $potential_entities = TagProcessor::mergeTokens($potential_entities);
     TaggerLogManager::logDebug("Merged:\n" . print_r($potential_entities, TRUE));
 
     parent::__construct($potential_entities);

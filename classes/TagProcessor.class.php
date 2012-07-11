@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Definition of TagProcessor.
+ */
 
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 
@@ -6,25 +10,52 @@ require_once __ROOT__ . 'classes/NamedEntityMatcher.class.php';
 require_once __ROOT__ . 'classes/Unmatched.class.php';
 require_once __ROOT__ . 'classes/Tag.class.php';
 
-class TaggedText {
-
-  private $text;
-
-  private $words;
-
-  private $tokenParts;
-  private $token;
-  private $tags = array();
-  private $tokenCount;
-  private $paragraphCount;
-
-  private $highlightedText;
-  private $intermediateHTML;
-
-  private $tagger;
+/**
+ * Main processor for Tagger.
+ *
+ * The class returned from Tagger::tagText().
+ * Contains tags and the highlighted text if requested.
+ */
+class TagProcessor {
 
   /**
-   * Constructs a TaggedText object.
+   * The text to be tagged.
+   */
+  private $text;
+
+  /**
+   * Tokens returned from Tokenizer.
+   */
+  private $partialTokens;
+
+  /**
+   * Number of tokens.
+   */
+  private $tokenCount;
+
+  /**
+   * Number of paragraphs found by preprocessor. (HTML or plaintext)
+   */
+  private $paragraphCount;
+
+  /**
+   * Structure for highlighting tags.
+   */
+  private $intermediateHTML;
+
+  /**
+   * Tags returned from Matcher.
+   */
+  private $tags = array();
+
+  /**
+   * Text with tags highlighted by HTML.
+   */
+  private $highlightedText;
+
+
+  /**
+   * Constructs a TagProcessor object.
    *
    * @param string $text
    *   Text to be tagged.
@@ -35,17 +66,27 @@ class TaggedText {
       throw new InvalidArgumentException('No text to find tags in has been supplied.');
     }
 
-
     // Change encoding if necessary.
     $this->text = $text;
     if (mb_detect_encoding($this->text) != 'UTF-8') {
       $this->text = utf8_encode($this->text);
     }
 
-    $this->tagger = Tagger::getTagger();
-
   }
 
+  /**
+   * Finds tags in the text.
+   *
+   * The main function which:
+   * - Preprocesses the text: finds paragraphs and tokens.
+   *   @see PlainTextPreprocessor
+   *   @see HTMLPreprocessor
+   * - Extracts keywords from the text (if enabled)
+   *   @see KeywordExtractor
+   *
+   * @param string $text
+   *   Text to be tagged.
+   */
   public function process() {
     TaggerLogManager::logVerbose("Text to be tagged:\n" . $this->text);
 
@@ -121,6 +162,76 @@ class TaggedText {
     }
   }
 
+  /**
+   * Merge identical tokens into tags.
+   *
+   * Tokens with same text are merged into a single tag.
+   *
+   * @param array $tokens
+   *   The tokens to be merged.
+   *
+   * @return array $tags
+   *   The tags of the text.
+   */
+  public static function mergeTokens($tokens) {
+    $tags = array();
+
+    for ($i = 0, $n = count($tokens)-1; $i <= $n; $i++) {
+      if (isset($tokens[$i])) {
+        $tag = new Tag($tokens[$i]);
+        for ($j = $i; $j <= $n; $j++) {
+          if (isset($tokens[$j]) && $tag->text == $tokens[$j]->text) {
+            $tag->tokens[$tag->text][] = &$tokens[$j];
+            unset($tokens[$j]);
+          }
+        }
+        $tags[] = $tag;
+      }
+    }
+
+    return $tags;
+  }
+
+  /**
+   * Merges tags.
+   *
+   * Relevant when synonyms are present in the text.
+   * Tags relating to the same entity but with different names/texts are merged
+   * as synonyms of a new tag.
+   *
+   * @param array $tags
+   *   The tags to be merged
+   * @param string $real_name
+   *   The canonical name of the tags
+   *
+   * @return Tag
+   *   The merged tag
+   */
+  public static function mergeTags($tags, $real_name = '') {
+    $ret_tag = new Tag($real_name);
+    $ret_tag->realName = $real_name;
+    foreach ($tags as $tag) {
+      $ret_tag->synonyms = array_unique(array_merge($ret_tag->synonyms, $tag->synonyms));
+      $ret_tag->tokens   = array_merge_recursive($ret_tag->tokens, $tag->tokens);
+      if(isset($tag->ambiguous)) {
+        $ret_tag->ambiguous = $tag->ambiguous;
+      }
+      if(isset($tag->meanings)) {
+        $ret_tag->meanings = $tag->meanings;
+      }
+    }
+    return $ret_tag;
+  }
+
+  /**
+   * Return the found tags as an associative array (default) or as Tag objects.
+   *
+   * @param array $options
+   *   Options to be overridden. Defaults to array().
+   *
+   * @return array $tags
+   *   Either an associative array (default) or an array of Tag objects.
+   */
   public function getTags($options = array()) {
 
     $default = Tagger::getConfiguration();
@@ -168,10 +279,19 @@ class TaggedText {
     return $tags;
   }
 
+  /**
+   * Get text with tags highlighted.
+   *
+   * @return string $this->highlightedText
+   *   The input text with found tags highlighted.
+   */
   public function getHighlightedText() {
     return $this->highlightedText;
   }
 
+  /**
+   * Highlights found tags in the text.
+   */
   private function highlightTags() {
 
     $this->highlightedText = '';
@@ -206,10 +326,16 @@ class TaggedText {
     foreach ($this->intermediateHTML as $element) {
       $this->highlightedText .= $element;
     }
-
-    return $this->highlightedText;
   }
 
+  /**
+   * Finds and adds linked data (URIs) to found tags.
+   *
+   * @param array $tags
+   *
+   * @return array $tags
+   *   Tags with linked data
+   */
   private function addUris($tags) {
     if (empty($tags)) {
       return $tags;

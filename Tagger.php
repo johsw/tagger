@@ -19,7 +19,7 @@ ini_set('memory_limit', '92M');
 mb_internal_encoding('UTF-8');
 
 require_once __ROOT__ . 'classes/TaggerHelpers.class.php';
-require_once __ROOT__ . 'classes/TaggedText.class.php';
+require_once __ROOT__ . 'classes/TagProcessor.class.php';
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
 
 

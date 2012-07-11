@@ -12,7 +12,7 @@ class KeywordExtractor {
   function __construct($tokens) {
     $this->tagger = Tagger::getTagger();
 
-    $this->word_tags = array();
+    $this->words = array();
 
     foreach (array_keys($tokens) as $key) {
       if (!preg_match('/^\w/u', $tokens[$key]->text)) {
@@ -21,20 +21,23 @@ class KeywordExtractor {
       }
     }
 
-    $this->word_tags = Tag::mergeTokens($tokens);
-    foreach ($this->word_tags as $key => $tag) {
+    $this->words = TagProcessor::mergeTokens($tokens);
+
+    // Rate and lowercase words
+    foreach ($this->words as $key => $tag) {
       $tag->rate();
-      $this->word_tags[mb_strtolower($tag->text)] = $tag;
-      unset($this->word_tags[$key]);
+      $this->words[mb_strtolower($tag->text)] = $tag;
+      unset($this->words[$key]);
     }
-    $this->word_count = array_sum(array_map(create_function('$tag', 'return $tag->freqRating;'), $this->word_tags));
+
+    $this->word_count = array_sum(array_map(create_function('$tag', 'return $tag->freqRating;'), $this->words));
   }
 
   public function determine_keywords() {
     $word_relations_table = Tagger::getConfiguration('db', 'word_relations_table');
     $lookup_table = Tagger::getConfiguration('db', 'lookup_table');
 
-    $words = array_map(create_function('$tag', 'return $tag->text;'), $this->word_tags);
+    $words = array_map(create_function('$tag', 'return $tag->text;'), $this->words);
 
     // Find keyword relations from the words in the text
     $query = "SELECT * FROM $word_relations_table WHERE word IN (:words)";
@@ -45,13 +48,13 @@ class KeywordExtractor {
 
       while ($row = TaggerQueryManager::fetch($result)) {
         // Words in the database are assumed to be lowercase already
-        if (isset($this->word_tags[$row['word']])) {
+        if (isset($this->words[$row['word']])) {
           if (!isset($subjects[$row['tid']]['rating'])) { $subjects[$row['tid']]['rating'] = 0; }
-            $subjects[$row['tid']]['rating'] += $row['score'] * $this->word_tags[$row['word']]->rating;
+            $subjects[$row['tid']]['rating'] += $row['score'] * $this->words[$row['word']]->rating;
 
           // Save the score contribution of each word
           if (Tagger::getConfiguration('keyword', 'debug')) {
-            $tag = clone $this->word_tags[$row['word']];
+            $tag = clone $this->words[$row['word']];
             $tag->rating *= $row['score'];
             $subjects[$row['tid']]['words'][] = $tag;
           }

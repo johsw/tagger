@@ -41,7 +41,7 @@ abstract class Matcher {
         $query = "SELECT COUNT(tid) AS count, tid, name, vid, GROUP_CONCAT(tid) AS tids FROM $lookup_table WHERE vid IN(:vocabularies) AND tid IN(:synonym_ids) AND canonical = 1 GROUP BY name";
         $args = array(':vocabularies' => array_values($this->vocabularies), ':synonym_ids' => array_keys($synonyms));
         $result = TaggerQueryManager::query($query, $args);
-  
+
         while ($row = TaggerQueryManager::fetch($result)) {
           if($row['name'] != '') {
             $row_matches = array();
@@ -56,7 +56,7 @@ abstract class Matcher {
                 $row_matches[] = $this->tokens[$synonym];
               }
             }
-            $match = Tag::mergeTags($row_matches);
+            $match = TagProcessor::mergeTags($row_matches);
             $match->ambiguous = ($row['count'] > 1);
             if ($match->ambiguous) {
               $match->meanings = $row['tids'];
