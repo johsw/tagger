@@ -1,14 +1,36 @@
 <?php
+/**
+ * @file
+ * Definition of EntityPreprocessor.
+ */
+
 require_once __ROOT__ . 'classes/Token.class.php';
+
+/**
+ * Finds plausible entities in the text.
+ */
 class EntityPreprocessor {
   private $tokens;
   private $named_entities;
 
-
+  /**
+   * Constructs EntityPreprocessor object.
+   *
+   * @param array $tokens
+   *   The tokens of a text.
+   */
   public function __construct($tokens) {
     $this->tokens = $tokens;
   }
 
+  /**
+   * Finds sequences of tokens that are likely to be named entities.
+   *
+   * It looks for capitalization and non-stopwords.
+   *
+   * @return array
+   *   Plausible named entities.
+   */
   public function get_potential_named_entities() {
     if (!isset($this->named_entities)) {
       $this->named_entities = array();
@@ -52,3 +74,4 @@ class EntityPreprocessor {
     }
   }
 }
+
