@@ -1,28 +1,63 @@
 <?php
+/**
+ * @file
+ * Definition of HTMLPreprocessor.
+ */
 
 require_once __ROOT__ . 'classes/Tokenizer.class.php';
 
+
+/**
+ * Finds plausible entities in the text.
+ */
 class HTMLPreprocessor {
-  public $html;
+
+  /**
+   * Number of paragraphs in the text.
+   */
   public $paragraphCount = 0;
+
+  /**
+   * Number of tokens in the text.
+   */
   public $tokenCount = 0;
 
-  public $intermediateHTML;
-
-  private $dom;
-  private $tagger;
-
-
+  /**
+   * Tokens in the text.
+   */
   public $tokens;
 
+  /**
+   * Structure for highlighting.
+   */
+  public $intermediateHTML;
+
+  /**
+   * The HTML to be parsed.
+   */
+  private $html;
+
+  /**
+   * The DOM of the parsed HTML.
+   */
+  private $dom;
+
+
+  /**
+   * Constructs a HTMLPreprocessor object.
+   *
+   * @param string $text
+   *   The text (HTML) to be preprocessed.
+   */
   public function __construct($text) {
-    $this->tagger = Tagger::getTagger();
-
-
-    $this->html = '<?xml encoding="UTF-8">' .  $text;
-
+    $this->html = '<?xml encoding="UTF-8">' . $text;
   }
 
+  /**
+   * The preprocessing function.
+   *
+   * Tokenizes the text and assigns paragraph numbers to the tokens.
+   */
   public function parse() {
     $this->dom = new DOMDocument("1.0", "UTF-8");
     @$this->dom->loadHTML($this->html);
@@ -30,8 +65,10 @@ class HTMLPreprocessor {
   }
 
   /**
-   * Recursively rates tokens within an HTML-element
-   * and all HTML-elements within it.
+   * Rate tokens according to surrounding HTML tags.
+   *
+   * Recursively rates tokens within an HTML-element and all HTML-elements
+   * within it.
    * rateElement also builds the intermediateHTML-array, that can be used to
    * recreate the original HTML with inserted markup to emphasize found tags.
    *
@@ -41,9 +78,11 @@ class HTMLPreprocessor {
    *   The base rating that should be added to the rating of this element.
    *   E.g. if this is a <strong> within an <h4> then the <h4>-rating is added
    *   via $cur_rating to this element's rating.
-   *
+   * @param bool $body_reached
+   *   TRUE if $element is inside $body. Defaults to FALSE.
+   *   Needed because any element before the body element should be ignored.
    */
-  public function rateElement($element, $cur_rating, $body_reached = FALSE) {
+  private function rateElement($element, $cur_rating, $body_reached = FALSE) {
     // build intermediateHTML
     if (Tagger::getConfiguration('named_entity', 'highlight', 'enable')) {
       if ($body_reached) {
@@ -96,6 +135,9 @@ class HTMLPreprocessor {
     }
   }
 
+  /**
+   * Construct highlighting tag. (<a>)
+   */
   private function makeHTMLbeginTag($element) {
     if ($element->nodeName == '#text') {
       return;
@@ -115,6 +157,9 @@ class HTMLPreprocessor {
     $this->intermediateHTML[] = $tag;
   }
 
+  /**
+   * Construct highlighting tag. (</a>)
+   */
   private function makeHTMLendTag($element) {
     if (!in_array($element->nodeName, array('#text', 'br','img'))) {
       $this->intermediateHTML[] = '</' . $element->nodeName . '>';
