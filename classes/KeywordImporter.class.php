@@ -29,45 +29,6 @@ class KeywordImporter {
     $this->totalWordCount = $row['word_count'];
   }
 
-  public function jsonCreateKeywords($filename = 'keywords.json') {
-    $json = $this->jsonLoad($filename);
-
-    $this->createKeywords($json);
-  }
-
-  public function jsonCreateWordstats($filename = 'keyword_texts.json') {
-    $json = $this->jsonLoad($filename);
-
-    $texts = array();
-    foreach($json as $tid => $keyword_texts) {
-      $texts = array_merge($texts, $keyword_texts);
-    }
-
-    return $this->createWordstats($texts);
-  }
-
-  public function jsonCreateWordRelations($filename = 'keyword_texts.json') {
-    $json = $this->jsonLoad($filename);
-
-    $this->createWordRelations($json);
-  }
-
-
-  private function jsonLoad($filename) {
-    if (!is_file($filename)) {
-      throw new Exception("No file named '$filename'.");
-    }
-    $file_contents = file_get_contents($filename);
-
-    $json = json_decode($file_contents, TRUE);
-
-    if ($json === NULL) {
-      $err = json_errcode_to_text(json_last_error());
-      throw new Exception("JSON $err.");
-    }
-
-    return $json;
-  }
 
   /**
    * Fills the tagger_lookup table with keywords
@@ -538,34 +499,6 @@ class KeywordImporter {
     }
   }
 
-  private function json_errcode_to_text($errcode) {
-    $err = '';
-    switch ($errcode) {
-      case JSON_ERROR_NONE:
-          $err = ' - No errors';
-      break;
-      case JSON_ERROR_DEPTH:
-          $err = ' - Maximum stack depth exceeded';
-      break;
-      case JSON_ERROR_STATE_MISMATCH:
-          $err = ' - Underflow or the modes mismatch';
-      break;
-      case JSON_ERROR_CTRL_CHAR:
-          $err = ' - Unexpected control character found';
-      break;
-      case JSON_ERROR_SYNTAX:
-          $err = ' - Syntax error, malformed JSON';
-      break;
-      case JSON_ERROR_UTF8:
-          $err = ' - Malformed UTF-8 characters, possibly incorrectly encoded';
-      break;
-      default:
-          $err = ' - Unknown error';
-      break;
-    }
-
-      return $err;
-  }
 
 }
 

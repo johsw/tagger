@@ -30,10 +30,10 @@ $tagger = Tagger::getTagger();
 $install = new TaggerInstaller($tagger);
 
 if ($run_json) {
-  require_once __ROOT__ . 'classes/KeywordImporter.class.php';
-  $KI = new KeywordImporter();
-  $KI->jsonCreateKeywords(__ROOT__ . 'keywords.json');
-  $KI->jsonCreateWordstats(__ROOT__ . 'keyword_texts.json');
-  $KI->jsonCreateWordRelations(__ROOT__ . 'keyword_texts.json');
+  require_once __ROOT__ . 'classes/JSONKeywordImporter.class.php';
+  $KI = new JSONKeywordImporter();
+  $KI->createKeywords(__ROOT__ . 'keywords.json');
+  $KI->createWordstats(__ROOT__ . 'keyword_texts.json');
+  $KI->createWordRelations(__ROOT__ . 'keyword_texts.json');
 }
 
