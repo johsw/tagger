@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Definition of JSONKeywordImporter.
+ * Contains JSONKeywordImporter.
  */
 
-require_once __ROOT__ . 'class/KeywordImporter.class.php';
+require_once __ROOT__ . 'classes/KeywordImporter.class.php';
 
 /**
  * KeywordImporter for JSON data.
@@ -19,10 +19,10 @@ class JSONKeywordImporter extends KeywordImporter {
    * @param string $filename
    *   The JSON file that contains the list of keywords.
    */
-  public function jsonCreateKeywords($filename = 'keywords.json') {
+  public function createKeywords($filename = 'keywords.json') {
     $json = $this->jsonLoad($filename);
 
-    $this->createKeywords($json);
+    parent::createKeywords($json);
   }
 
   /**
@@ -31,7 +31,7 @@ class JSONKeywordImporter extends KeywordImporter {
    * @param string $filename
    *   The JSON file that contains the texts with assigned keywords.
    */
-  public function jsonCreateWordstats($filename = 'keyword_texts.json') {
+  public function createWordstats($filename = 'keyword_texts.json') {
     $json = $this->jsonLoad($filename);
 
     $texts = array();
@@ -39,7 +39,7 @@ class JSONKeywordImporter extends KeywordImporter {
       $texts = array_merge($texts, $keyword_texts);
     }
 
-    return $this->createWordstats($texts);
+    return parent::createWordstats($texts);
   }
 
   /**
@@ -48,10 +48,10 @@ class JSONKeywordImporter extends KeywordImporter {
    * @param string $filename
    *   The JSON file that contains the texts with assigned keywords.
    */
-  public function jsonCreateWordRelations($filename = 'keyword_texts.json') {
+  public function createWordRelations($filename = 'keyword_texts.json') {
     $json = $this->jsonLoad($filename);
 
-    $this->createWordRelations($json);
+    parent::createWordRelations($json);
   }
 
 
