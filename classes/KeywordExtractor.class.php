@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definition of KeywordExtractor.
+ * Contains KeywordExtractor.
  */
 
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
@@ -139,4 +139,6 @@ class KeywordExtractor {
       TaggerLogManager::logDebug("No keyword-relevant words found.");
     }
   }
+
 }
+
