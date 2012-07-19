@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Contains KeywordImporter.
+ */
 ini_set('memory_limit', '1024M');
 
 require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
@@ -6,10 +10,14 @@ require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
 require_once __ROOT__ . 'classes/Tokenizer.class.php';
 require_once __ROOT__ . 'classes/Stemmer.class.php';
 
-//require_once('Timer.class.php');
-
+/**
+ * Implements functionality for generating keyword extraction lookup tables.
+ */
 class KeywordImporter {
 
+  /**
+   * Constructs a KeywordImporter object.
+   */
   public function __construct() {
     $db_conf = Tagger::getConfiguration('db');
     $this->docstatsTable = $db_conf['docstats_table'];
@@ -31,16 +39,13 @@ class KeywordImporter {
 
 
   /**
-   * Fills the tagger_lookup table with keywords
+   * Fills the tagger_lookup table with keywords.
    *
    * @param array $tids_keywords
    *   Array of keyword names {keys: tids, values: keywords}
-   *   e.g. array(214 => 'Forest fires', ..)
-   * @param bool $check
-   *   Check whether keyword exists in database.
-   *
+   *   e.g. @code array(214 => 'Forest fires', ..) @endcode
    */
-  protected function createKeywords($tids_keywords, $check = TRUE) {
+  protected function createKeywords($tids_keywords) {
     $fields = array('tid', 'vid', 'name', 'canonical');
 
     $values = array();
@@ -56,7 +61,7 @@ class KeywordImporter {
    *
    * @param array $tids_texts
    *   Array of arrays {keys: keyword tids, values: arrays texts}
-   *   e.g. array(214 => array('Forest fire consumes city','Montana gets new seaplane'), ..)
+   *   e.g. @code array(214 => array('Forest fire consumes city','Montana gets new seaplane'), ..) @endcode
    *   where 214 is a keyword tid and the array contains text related to that keyword
    * @param bool $check
    *   Check whether keyword exists in database.
@@ -96,7 +101,7 @@ class KeywordImporter {
         list($tid, $name) = explode('|', $line);
         unset($keywords[$tid]);
       }
- 
+
       $keyword_count = count($keywords);
     }
     else {
@@ -127,6 +132,16 @@ class KeywordImporter {
     }
   }
 
+  /**
+   * Create related word data in the database for a single keyword.
+   *
+   * @param int $tid
+   *   The `tid` of the keyword.
+   * @param array $texts
+   *   The texts related to the keyword.
+   * @param bool $check
+   *   Check if the keyword has too few texts. Defaults to TRUE.
+   */
   public function createRelatedWords($tid, $texts, $check = TRUE) {
 
     if ($check) {
@@ -167,6 +182,7 @@ class KeywordImporter {
     $property_esc = TaggerQueryManager::quote($this->property);
 
     // Get and score the words related to this keyword
+
     $result = $this->findSignificantWords($texts);
     $hits = $result['doc_count'];
     $freq_array = &$result['freq_array'];
@@ -205,8 +221,23 @@ class KeywordImporter {
   }
 
 
-
-  function findSignificantWords($texts, $prop = FALSE, $normalize = FALSE) {
+  /**
+   * Finds significant words in a collection of texts.
+   *
+   * @param array $texts
+   *   The collection of texts to be analyzed.
+   * @param string $prop
+   *   The property on which to base word significance.
+   * @param bool $normalize
+   *   Whether to normalize such that the most significant word has a
+   *   significance of 1 and all others have a fraction of that.
+   *
+   * @return array
+   *   An array with two keys: `'doc_count'` and `'freq_array'`. `doc_count` is
+   *   the number of texts considered and `freq_array` is an array with words as
+   *   keys and their significance as values.
+   */
+  private function findSignificantWords($texts, $prop = FALSE, $normalize = FALSE) {
 
     if ($prop === FALSE) {
       $prop = $this->property;
@@ -263,7 +294,7 @@ class KeywordImporter {
       // in how many related articles does this word occur? (relative to the number of related articles)
       // i.e. the percentage of related articles where this word occurs
       $temp_elem['inner_doc_freq'] = ($temp_elem['doc_count']-1)/$doc_count;
-      // in how many related articles does this word occur? 
+      // in how many related articles does this word occur?
       // (relative to the total number of articles where this word occurs)
       // i.e. the percentage of articles in which this word occurs that are related to this keyword
       $temp_elem['outer_doc_freq'] = min(($temp_elem['doc_count']-1)/(1+$temp_elem['doc_count_db']), 1);
@@ -302,8 +333,8 @@ class KeywordImporter {
         $val = max(array_map(create_function('$value', 'return $value[$p];'), $freq_array));
         $val = ($val == 0) ? 1 : $val;
         $factor = 1/$val;
-        
-        // divide any other score by that (the largest) score 
+
+        // divide any other score by that (the largest) score
         foreach($freq_array as &$value) {
           $value[$p] *= $factor;
         }
@@ -311,7 +342,7 @@ class KeywordImporter {
     }
 
     //$timer->stop();
-    
+
     //echo "Calculations took " . $timer->secsElapsed() . " seconds.\n";
 
     $result =  array();
@@ -322,6 +353,16 @@ class KeywordImporter {
   }
 
 
+  /**
+   * Create and insert word statistics data into database.
+   *
+   * @param array $texts
+   *   The texts on which to make word stats.
+   *
+   * @return array
+   *   An array with the first value being the total document count and the
+   *   second is total is the total word count.
+   */
   public function createWordstats($texts) {
     $sql = "TRUNCATE $this->wordstatsTable";
     TaggerQueryManager::query($sql);
@@ -344,6 +385,19 @@ class KeywordImporter {
     return array($this->totalDocCount, $this->totalWordCount);
   }
 
+  /**
+   * Create word statistics data based on a collection of texts.
+   *
+   * Updates the wordstats table according to word frequencies in the text
+   * collection.
+   *
+   * @param array $texts
+   *   The collection of text on which to calculate word stats.
+   *
+   * @return array
+   *   An array with the first value being the total document count and the
+   *   second being the total word count.
+   */
   public function calculateWordstats($texts) {
 
     $doc_count = 0;
@@ -379,7 +433,14 @@ class KeywordImporter {
   }
 
 
-  function updateWordstatsTable($frequencies) {
+  /**
+   * Updates the wordstats table.
+   *
+   * @param array $frequencies
+   *   An associative array with words as keys and associative array containing
+   *   word statistics as values.
+   */
+  private function updateWordstatsTable($frequencies) {
 
     $counter = 0;
 
@@ -424,8 +485,7 @@ class KeywordImporter {
     $unmatched_database = array();
     $unmatched_words = $frequency;
     while ($row = TaggerQueryManager::fetch($result)) {
-      // words in the database are assumed to be in mb-lowercase
-      // (mb_strtolower)
+      // words in the database are assumed to be in mb-lowercase (mb_strtolower)
       $key = $row['word'];
 
       if(isset($frequency[$key])) {
@@ -448,7 +508,16 @@ class KeywordImporter {
   }
 
 
-  // Get word frequencies for a text
+  /**
+   * Count the number of occurences of each word in a text.
+   *
+   * @param string $text
+   *   The text which should be word counted.
+   *
+   * @return array
+   *   An array where the keys are words and the values are their frequencies
+   *   (the number of occurences).
+   */
   private function countWords($text) {
     if ($text == '') {
       return array();
@@ -482,6 +551,16 @@ class KeywordImporter {
     return $frequency;
   }
 
+  /**
+   * Find name corresponding to tid. (in the database)
+   *
+   * @param int $tid
+   *   The tid to be looked up in the database.
+   *
+   * @return string|bool
+   *   If the tid was found in the database the corresponding name is returned
+   *   otherwise FALSE is returned.
+   */
   public function tidToName($tid) {
 
     $query = "SELECT name FROM $this->lookupTable WHERE vid = 16 AND tid = $tid AND canonical = 1";
@@ -498,7 +577,6 @@ class KeywordImporter {
       return FALSE;
     }
   }
-
 
 }
 
