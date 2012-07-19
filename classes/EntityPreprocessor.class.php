@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definition of EntityPreprocessor.
+ * Contains EntityPreprocessor.
  */
 
 require_once __ROOT__ . 'classes/Token.class.php';
@@ -26,7 +26,7 @@ class EntityPreprocessor {
   /**
    * Finds sequences of tokens that are likely to be named entities.
    *
-   * It looks for capitalization and non-stopwords.
+   * Looks for capitalization and non-stopwords.
    *
    * @return array
    *   Plausible named entities.
