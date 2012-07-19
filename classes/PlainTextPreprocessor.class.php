@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definition of PlainTextPreprocessor.
+ * Contains PlainTextPreprocessor.
  */
 
 require_once __ROOT__ . 'classes/Tokenizer.class.php';

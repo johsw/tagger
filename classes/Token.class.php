@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definition of Token.
+ * Contains Token.
  */
 
 

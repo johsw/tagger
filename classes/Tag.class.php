@@ -1,18 +1,18 @@
 <?php
 /**
  * @file
- * Definition of Tag.
+ * Contains Tag.
  */
 
 require_once __ROOT__ . 'classes/Token.class.php';
 
 /*
- * Represents a token.
+ * Represents a tag.
  *
- * Tags are the overall tags found in the text, i.e. tags are unique.
- * The tag is a collection of identical tokens found at different places in the 
- * text.
- * It has a rating that is the sum of the ratings of the individual tokens.
+ * Tags are named entities and keywords. Tags are unique.
+ * A named entity Tag is a collection of identical tokens found at different
+ * places in the text, and has a rating that is the sum of the ratings of the
+ * individual tokens.
  */
 class Tag extends Token {
 

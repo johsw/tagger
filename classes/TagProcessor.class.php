@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definition of TagProcessor.
+ * Contains TagProcessor.
  */
 
 require_once __ROOT__ . 'logger/TaggerLogManager.class.php';
@@ -81,6 +81,8 @@ class TagProcessor {
    * - Preprocesses the text: finds paragraphs and tokens.
    *   @see PlainTextPreprocessor
    *   @see HTMLPreprocessor
+   * - Finds named entities in the text (if enabled)
+   *   @see NamedEntityMatcher
    * - Extracts keywords from the text (if enabled)
    *   @see KeywordExtractor
    *

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definition of Tokenizer.
+ * Contains Tokenizer.
  */
 
 require_once __ROOT__ . 'classes/Token.class.php';
