@@ -1,7 +1,9 @@
 <?php
 /**
  * @file
- * Definition of Tagger. The base of the Tagger library.
+ * Contains Tagger.
+ *
+ * The base of the Tagger library.
  */
 
 /**
@@ -58,7 +60,7 @@ class Tagger {
   public static $stopwords;
 
   /**
-   * When overriding the configuration the settings in this array will be fully 
+   * When overriding the configuration the settings in this array will be fully
    * overriden (not appended to). Defaults to array('vocab_ids').
    */
   private static $override = array('vocab_ids');
@@ -135,8 +137,7 @@ class Tagger {
    * If called with no arguments this function returns the full configuration
    * array.
    * If called with arguments, each argument is a key in the configuration array
-   * i.e. getConfiguration('keyword', 'vocab_ids') == 
-   *        $configuration['keyword']['vocab_ids']
+   * i.e. @code getConfiguration('keyword', 'vocab_ids') == $configuration['keyword']['vocab_ids']; @endcode
    */
   public static function getConfiguration() {
     self::getTagger();
@@ -167,8 +168,9 @@ class Tagger {
    * with the arguments.
    * If called with non-array arguments the first argument is the new value of
    * the setting. Each following argument is a key in the configuration array.
-   * i.e. setConfiguration(array(17), 'keyword', 'vocab_ids'): 
-   *        $configuration['keyword']['vocab_ids'] = array(17);
+   * i.e. @code setConfiguration(array(17), 'keyword', 'vocab_ids'); @endcode
+   * is equivalent to
+   *      @code $configuration['keyword']['vocab_ids'] = array(17); @endcode
    */
   public static function setConfiguration() {
     $arg_count = func_num_args();
@@ -234,8 +236,9 @@ class Tagger {
    *   - 'log_unmatched': Boolean indicating whether unmatched potential
    *     NER candidates should be logged
    *   - 'nl2br': Boolean indicating whether newlines should be convertet to br-tags
+   *
    * @return
-   *   TaggedText object
+   *   TagProcessor object
    */
 
   public function tagText($text, $options = array()) {
@@ -265,11 +268,11 @@ class Tagger {
     }
 
 
-    $tagged_text = new TaggedText($text);
-    $tagged_text->process();
+    $tag_processor = new TagProcessor($text);
+    $tag_processor->process();
     self::$configuration = $default;
 
-    return $tagged_text;
+    return $tag_processor;
   }
 
   /**
@@ -290,3 +293,4 @@ class Tagger {
   }
 
 }
+
