@@ -1,16 +1,16 @@
 <?php
 /**
  * @file
- * Definition of Disambiguator.
+ * Contains Disambiguator.
  */
 
 /**
  * Contains disambiguation functionality.
  *
- * When the NamedEntityMatcher finds multiple matches (Tags) for a word in the
- * text it returns a Tag with multiple meanings ($tag->meanings).
+ * When the NamedEntityMatcher finds multiple matches (`Tag`s) for a word in the
+ * text, it returns a Tag with multiple meanings ($tag->meanings).
  * For example "America" is both a band name, name of several cities, a
- * supercontinent, colloquial name of a country and so on...
+ * supercontinent, colloquial name of a country and so on.
  * The Disambiguator uses the disambiguation table in the database to find
  * related words to each of these `meanings`, and then picks the meaning with
  * most related words occurring in the text.
@@ -41,8 +41,8 @@ class Disambiguator {
   /**
    * Disambiguation function.
    *
-   * Runs through each ambiguous tag (those that have multiple meanings) and
-   * finds the most probable meaning and set the tid accordingly.
+   * Runs through each ambiguous Tag (those that have multiple meanings),
+   * finds the most probable meaning and sets the `tid` of the Tag accordingly.
    */
   public function disambiguate() {
 
@@ -68,14 +68,15 @@ class Disambiguator {
    * Disambiguates a single Tag.
    *
    * For each meaning of the Tag it fetches the related words (via
-   * getRelatedWords) and chooses the meaning with the most related words
+   * getRelatedWords()) and chooses the meaning with the most related words
    * occurring in the text.
    *
    * @param Tag $tag
    *   The that should be disambiguated.
    *
    * @return int
-   *   The tid of meaning the with most occurences of related words in the text.
+   *   The tid of the meaning the with most occurences of related words in the
+   *   text.
    */
   public function checkRelatedWords($tag) {
     $related_words = $this->getRelatedWords($tag);
@@ -99,6 +100,12 @@ class Disambiguator {
 
   /**
    * Gets related words from the disambigutation table.
+   *
+   * Related words in the disambiguation sense are words that would likely occur
+   * together with a specific `meaning` of the Tag.
+   * E.g. 'band', 'music', 'album' are words that would likely occur together
+   * with the band 'America' and so are related to the "band" meaning of
+   * 'America'.
    *
    * @param Tag $tag
    *   The tag for which to find related words.
