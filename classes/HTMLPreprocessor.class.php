@@ -1,14 +1,19 @@
 <?php
 /**
  * @file
- * Definition of HTMLPreprocessor.
+ * Contains HTMLPreprocessor.
  */
 
 require_once __ROOT__ . 'classes/Tokenizer.class.php';
 
 
 /**
- * Finds plausible entities in the text.
+ * Preprocessor for HTML.
+ *
+ * Counts words and paragraphs in the text and extracts the text (in the form of
+ * `Token`s) from the HTML.
+ *
+ * @see PlainTextPreprocessor
  */
 class HTMLPreprocessor {
 

@@ -108,6 +108,5 @@ class PlainTextPreprocessor {
       return preg_replace('/\<br(\s*)?\/?\>/i', "\n", $string);
   }
 
-
 }
 
