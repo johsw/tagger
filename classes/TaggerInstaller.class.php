@@ -1,9 +1,19 @@
 <?php
+/**
+ * @file
+ * Contains TaggerInstaller.
+ */
 
 require_once __ROOT__ . 'db/TaggerQueryManager.class.php';
 
+/**
+ * A class which when instantiated creates the tagger_ tables.
+ */
 class TaggerInstaller {
 
+  /**
+   * Constructs a TaggerInstaller object and creates the tagger_ tables.
+   */
   public function __construct($tagger) {
     if (!isset($tagger)) {
       throw new InvalidArgumentException('The installer needs a valid Tagger object.');
@@ -92,9 +102,7 @@ class TaggerInstaller {
       )  DEFAULT CHARSET=utf8;
     ");
     //TaggerQueryManager::query("TRUNCATE TABLE `$wordstats_table`;");
-    
   }
 
-
 }
-?>
+
