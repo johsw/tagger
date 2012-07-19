@@ -1,17 +1,27 @@
 <?php
+/**
+ * @file
+ * Contains Stemmer.
 
 /**
+ * Implements word-stemming funcitonality.
+ *
  * This is a danish stemmer based on: http://drupal.org/project/danishstemmer
- * Which in turn is basod on the Snowball project:
- *    http://snowball.tartarus.org/algorithms/danish/stemmer.html
+ * which in turn is basod on the Snowball project:
+ * http://snowball.tartarus.org/algorithms/danish/stemmer.html
  */
-
 class Stemmer {
   private function Stemmer() {}
   private static $endings = array('erendes', 'erende', 'hedens', 'endes', 'erede', 'erens', 'erets', 'ernes', 'ethed', 'heden', 'heder', 'ende', 'enes', 'ered', 'eren', 'erer', 'eres', 'eret', 'erne', 'heds', 'hed', 'ene', 'ens', 'ere', 'ers', 'ets', 'en', 'er', 'es', 'et', 'e');
   private static $endings_regex = '/(erendes|erende|hedens|endes|erede|erens|erets|ernes|ethed|heden|heder|ende|enes|ered|eren|erer|eres|eret|erne|heds|hed|ene|ens|ere|ers|ets|en|er|es|et|e)$/';
 
-  // This uses the external Snowball stemmer - hence the double underscore for hiding
+  /**
+   * Stem a danish word using the `stem` PECL extension.
+   *
+   * Calls the external (extension) function `stem_danish`, which is faster.
+   * The extension uses the Snowball project C library.
+   * http://pecl.php.net/package/stem
+   */
   public static function __stemWord($word) {
     return utf8_encode(stem_danish(utf8_decode($word)));
 
@@ -25,6 +35,12 @@ class Stemmer {
 
   /**
    * Stem a Danish word.
+   *
+   * @param string $word
+   *   Word to stemWord.
+   *
+   * @return string
+   *   Stemmed word.
    */
   public static function stemWord($word) {
     $word = mb_strtolower($word);
@@ -113,3 +129,4 @@ class Stemmer {
     return $word;
   }
 }
+
