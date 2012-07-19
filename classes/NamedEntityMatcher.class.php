@@ -17,9 +17,6 @@ class NamedEntityMatcher extends Matcher {
     $potential_entities = $entityPreprocessor->get_potential_named_entities();
     TaggerLogManager::logDebug("Found potential entities:\n" . print_r($potential_entities, TRUE));
 
-    $potential_entities = $this->flattenTokens($potential_entities);
-    TaggerLogManager::logDebug("Flattened:\n" . print_r($potential_entities, TRUE));
-
     $potential_entities = TagProcessor::mergeTokens($potential_entities);
     TaggerLogManager::logDebug("Merged:\n" . print_r($potential_entities, TRUE));
 
@@ -48,30 +45,6 @@ class NamedEntityMatcher extends Matcher {
     $this->nonmatches = array_merge($nonmatches, $this->nonmatches);
 
     return;
-  }
-
-  private function flattenTokens($tokens) {
-    $flattened_tokens = array();
-    foreach ($tokens as $token_split) {
-      $token = new Token(implode(' ', $token_split));
-      reset($token_split);
-      $first = current($token_split);
-      $token->tokenNumber = $first->tokenNumber;
-      $token->paragraphNumber = $first->paragraphNumber;
-      $token->rating = $first->rating;
-      $token->posRating = $first->posRating;
-      $token->htmlRating = $first->htmlRating;
-      foreach ($token_split as $key => $token_part) {
-        if ($token_part->htmlRating > $token->htmlRating) {
-          $token->htmlRating = $token_part->htmlRating;
-          $token->posRating = $token_part->posRating;
-          $token->rating = $token_part->rating;
-        }
-        $token->tokenParts = $token_split;
-      }
-      $flattened_tokens[] = $token;
-    }
-    return $flattened_tokens;
   }
 
 }
